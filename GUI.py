@@ -18,35 +18,26 @@ class MainWindow(QWidget):
         file_browse = QPushButton('Browse')
         file_browse.clicked.connect(self.open_file_dialog)
         self.filename_edit = QLineEdit()
-        self.prompt = QTextEdit()
-        self.prompt.setMaximumHeight(200)
-        self.prompt.setReadOnly(True)
-        self.nprompt = QTextEdit()
-        self.nprompt.setMaximumHeight(200)
-        self.nprompt.setReadOnly(True)
-        self.steps = QLineEdit()
-        self.steps.setReadOnly(True)
-        self.sampler = QLineEdit()
-        self.sampler.setReadOnly(True)
-        self.cfg_scale = QLineEdit()
-        self.cfg_scale.setReadOnly(True)
-        self.seed = QLineEdit()
-        self.seed.setReadOnly(True)
+        self.widget_info = [
+            ('Positive prompt:', QTextEdit(), 'prompt'),
+            ('Negative prompt:', QTextEdit(), 'nprompt'),
+            ('Steps:', QLineEdit(), 'steps'),
+            ('Sampler:', QLineEdit(), 'sampler'),
+            ('CFG scale:', QLineEdit(), 'cfg_scale'),
+            ('Seed:', QLineEdit(), 'seed'),
+            ('Size:', QLineEdit(), 'size'),
+            ('Model hash:', QLineEdit(), 'model_hash'),
+            ('Model:', QLineEdit(), 'model'),
+        ]
         layout.addWidget(QLabel('File:'), 0, 0)
         layout.addWidget(self.filename_edit, 0, 1)
         layout.addWidget(file_browse, 0 ,2)
-        layout.addWidget(QLabel('Positive prompt:'), 1, 0)
-        layout.addWidget(self.prompt, 1, 1)
-        layout.addWidget(QLabel('Negative prompt:'), 2, 0)
-        layout.addWidget(self.nprompt, 2, 1)
-        layout.addWidget(QLabel('Steps:'), 3, 0)
-        layout.addWidget(self.steps, 3, 1)
-        layout.addWidget(QLabel('Sampler:'), 4, 0)
-        layout.addWidget(self.sampler, 4, 1)
-        layout.addWidget(QLabel('CFG scale:'), 5, 0)
-        layout.addWidget(self.cfg_scale, 5, 1)
-        layout.addWidget(QLabel('Seed:'), 6, 0)
-        layout.addWidget(self.seed, 6, 1)
+        for row, (label_text, widget, widget_name) in enumerate(self.widget_info):
+            label = QLabel(label_text)
+            setattr(self, widget_name, widget)  # Set widget as an attribute of the class
+            widget.setReadOnly(True)  # Set widget properties if needed
+            layout.addWidget(label, row+1, 0)
+            layout.addWidget(widget, row+1, 1)
       
         self.show()
 
@@ -67,19 +58,12 @@ class MainWindow(QWidget):
                 prompt = image.positivePrompt()
                 
                 if prompt == -1:
-                    self.prompt.setText('')
-                    self.nprompt.setText('')
-                    self.steps.setText('')
-                    self.sampler.setText('')
-                    self.cfg_scale.setText('')
+                    for _, widget, _ in self.widget_info:
+                        widget.setText('')
                 else:
                     data = image.getInfo()
-                    self.prompt.setText(data["prompt"])
-                    self.nprompt.setText(data["nprompt"])
-                    self.steps.setText(data["steps"])
-                    self.sampler.setText(data["sampler"])
-                    self.cfg_scale.setText(data["cfg_scale"])
-                    self.seed.setText(data["seed"])
+                    for _, widget, key in self.widget_info:
+                        widget.setText(data[key])
 
 
 
