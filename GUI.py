@@ -30,6 +30,8 @@ class MainWindow(QWidget):
         self.sampler.setReadOnly(True)
         self.cfg_scale = QLineEdit()
         self.cfg_scale.setReadOnly(True)
+        self.seed = QLineEdit()
+        self.seed.setReadOnly(True)
         layout.addWidget(QLabel('File:'), 0, 0)
         layout.addWidget(self.filename_edit, 0, 1)
         layout.addWidget(file_browse, 0 ,2)
@@ -43,6 +45,8 @@ class MainWindow(QWidget):
         layout.addWidget(self.sampler, 4, 1)
         layout.addWidget(QLabel('CFG scale:'), 5, 0)
         layout.addWidget(self.cfg_scale, 5, 1)
+        layout.addWidget(QLabel('Seed:'), 6, 0)
+        layout.addWidget(self.seed, 6, 1)
       
         self.show()
 
@@ -75,6 +79,7 @@ class MainWindow(QWidget):
                     self.steps.setText(data["steps"])
                     self.sampler.setText(data["sampler"])
                     self.cfg_scale.setText(data["cfg_scale"])
+                    self.seed.setText(data["seed"])
 
 
 
