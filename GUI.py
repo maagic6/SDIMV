@@ -1,6 +1,6 @@
 import sys
-from PyQt6.QtWidgets import QApplication, QMainWindow, QFileDialog, QWidget, QGridLayout,QLineEdit,QPushButton, QLabel, QTextEdit, QListWidget, QVBoxLayout, QFrame, QMenu
-from PyQt6.QtGui import QPixmap, QIcon, QAction
+from PyQt6.QtWidgets import QApplication, QMainWindow, QFileDialog, QWidget, QGridLayout,QLineEdit,QPushButton, QLabel, QTextEdit, QListWidget, QVBoxLayout, QFrame, QMenu, QListWidgetItem
+from PyQt6.QtGui import QPixmap, QIcon, QAction, QStandardItemModel, QStandardItem
 from PyQt6.QtCore import QSize, Qt
 from pathlib import Path
 from Image import ImageProcess
@@ -48,10 +48,19 @@ class MainWindow(QWidget):
         layout.addWidget(self.image_preview_frame, 1, 3, 1, 2)
         #layout.addWidget(self.browse_button, 4, 0, 1, 2)
 
-        # Storage for selected file paths
+        #set stretch factors
+        layout.setColumnStretch(0, 1)
+        layout.setColumnStretch(1, 1)
+        layout.setColumnStretch(2, 2)  # This column will take twice as much space as the others
+
+        #set alignments
+        layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
+
+        #storage for selected file paths
         self.selected_files = []
 
-        # Enable drop events
+        #enable drop events
         self.setAcceptDrops(True)
 
         self.widget_info = [
@@ -64,6 +73,7 @@ class MainWindow(QWidget):
             ('Size:', QLineEdit(), 'size'),
             ('Model hash:', QLineEdit(), 'model_hash'),
             ('Model:', QLineEdit(), 'model'),
+            ('Lora:', QLineEdit(), 'lora'),
             ('Raw:', QTextEdit(), 'raw')
         ]
         #layout.addWidget(self.filename_edit, 0, 1)
@@ -91,9 +101,10 @@ class MainWindow(QWidget):
             self.update_file_list()
 
     def update_file_list(self):
-        unique_files = list(set(self.selected_files))
         self.file_list.clear()
-        self.file_list.addItems(unique_files)
+        for file_path in self.selected_files:
+            item = QListWidgetItem(file_path)
+            self.file_list.addItem(item)
 
     def clear_file_list(self):
         self.selected_files = []
@@ -150,8 +161,8 @@ class MainWindow(QWidget):
         mime_data = event.mimeData()
 
         if mime_data.hasUrls() and all(url.isLocalFile() for url in mime_data.urls()):
-            filenames = [url.toLocalFile() for url in mime_data.urls()]
-            self.selected_files.extend(filenames)
+            new_files = [url.toLocalFile() for url in mime_data.urls() if url.toLocalFile() not in self.selected_files]
+            self.selected_files.extend(new_files)
             self.update_file_list()
             event.acceptProposedAction()
             

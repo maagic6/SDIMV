@@ -23,7 +23,8 @@ class ImageProcess:
                             "seed": "", 
                             "size": "",
                             "model_hash": "",
-                            "model": ""}
+                            "model": "",
+                            "lora": ""}
         else:
             self.compatible = False
 
@@ -46,6 +47,9 @@ class ImageProcess:
         self.data["model_hash"]=model_hash
         model = str(re.split(r',' ,re.split(r'Model: ', self.info)[1])[0])
         self.data["model"]=model
+        lora_tags = re.findall(r'<lora:[^>]+>', self.info)
+        lora_string = ' '.join(lora_tags)
+        self.data["lora"] = lora_string
         return self.data
     
     def getRaw(self):
