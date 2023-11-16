@@ -133,7 +133,7 @@ class MainWindow(QWidget):
                     data = image.getInfo()
                     for _, widget, key in self.widget_info:
                         if key == 'raw':
-                            widget.setText(image.getRaw())
+                            widget.setText(str(image.getRaw()))
                         else:
                             widget.setText(data[key])
 

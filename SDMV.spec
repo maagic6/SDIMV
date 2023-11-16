@@ -5,7 +5,7 @@ a = Analysis(
     ['SDMV.py'],
     pathex=[],
     binaries=[],
-    datas=[('icon/emu.ico','icon')],
+    datas=[],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
@@ -34,4 +34,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    icon=['emu.ico'],
 )
