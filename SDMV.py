@@ -72,8 +72,8 @@ class MainWindow(QWidget):
         #set stretch factors
         grid_layout.setColumnStretch(0, 1)
         grid_layout.setColumnStretch(1, 1)
-        grid_layout.setColumnStretch(2, 1)  # This column will take twice as much space as the others
-
+        grid_layout.setColumnStretch(2, 1)
+        
         #set alignments
         grid_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         grid_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
@@ -104,8 +104,8 @@ class MainWindow(QWidget):
 
         for row, (label_text, widget, widget_name) in enumerate(self.widget_info):
             label = QLabel(label_text)
-            setattr(self, widget_name, widget)  # Set widget as an attribute of the class
-            widget.setReadOnly(True)  # Set widget properties if needed
+            setattr(self, widget_name, widget)
+            widget.setReadOnly(True)
             grid_layout.addWidget(label, row+4, 0, 1, 5)
             grid_layout.addWidget(widget, row+4, 1, 1, 5)
 
