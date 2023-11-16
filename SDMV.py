@@ -38,10 +38,6 @@ class MainWindow(QWidget):
         self.clear_list_button = QPushButton('Clear')
         self.clear_list_button.clicked.connect(self.clear_file_list)
 
-        github_label = QLabel()
-        github_logo_pixmap = QPixmap('icon/github.png')
-        github_label.setPixmap(github_logo_pixmap.scaledToHeight(20))  
-
         github_link = QLabel('<a href="https://github.com/maagic6/sd_image">GitHub</a>')
         github_link.setOpenExternalLinks(True)
         
@@ -65,7 +61,6 @@ class MainWindow(QWidget):
         grid_layout.addWidget(QLabel('Selected file:'), 3, 0)
         grid_layout.addWidget(self.selected_file, 3, 1, 1, 5)
         grid_layout.addWidget(self.image_preview_frame, 1, 3, 1, 2)
-        bottom_left_layout.addWidget(github_label)
         bottom_left_layout.addWidget(github_link)
         bottom_right_layout.addWidget(version_label)
 
@@ -73,7 +68,7 @@ class MainWindow(QWidget):
         grid_layout.setColumnStretch(0, 1)
         grid_layout.setColumnStretch(1, 1)
         grid_layout.setColumnStretch(2, 1)
-        
+
         #set alignments
         grid_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         grid_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
