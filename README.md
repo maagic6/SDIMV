@@ -16,6 +16,6 @@ Build (for Linux/MacOS)
 ```python
 pip install -r requirements.txt
 pip install pyinstaller
-pyinstaller GUI.spec
+pyinstaller SDMV.spec
 ```
 Distributable can be found in /dist after building
