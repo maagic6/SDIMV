@@ -1,4 +1,4 @@
-# SD Image Metadata viewer
+# SD Image Metadata Viewer
 
 Standalone program for viewing metadata of stable diffusion generated images
 
