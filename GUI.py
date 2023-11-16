@@ -1,7 +1,7 @@
 import sys
-from PyQt6.QtWidgets import QApplication, QMainWindow, QFileDialog, QWidget, QGridLayout,QLineEdit,QPushButton, QLabel, QTextEdit, QListWidget, QVBoxLayout, QFrame, QMenu, QListWidgetItem
-from PyQt6.QtGui import QPixmap, QIcon, QAction, QStandardItemModel, QStandardItem
-from PyQt6.QtCore import QSize, Qt
+from PyQt6.QtWidgets import QApplication, QFileDialog, QWidget, QGridLayout,QLineEdit,QPushButton, QLabel, QTextEdit, QListWidget, QVBoxLayout, QFrame, QMenu, QListWidgetItem
+from PyQt6.QtGui import QPixmap, QIcon, QAction
+from PyQt6.QtCore import Qt
 from pathlib import Path
 from Image import ImageProcess
 from icon import resource_path
@@ -10,48 +10,49 @@ class MainWindow(QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        #window size
         self.setWindowTitle('SD Image Metadata')
-        #self.setFixedSize(480, 720)
         self.setGeometry(100, 100, 400, 200)
 
-        # UI components
-        
+        #ui components
         self.image_preview = QLabel()
-        #self.image_preview.setGeometry(50,40,250,250)
         self.image_preview_frame = QFrame()
         self.image_preview_frame.setFrameShape(QFrame.Shape.Box)
         self.image_preview_frame.setFixedSize(200,300)
         self.image_preview_frame.setLineWidth(1)
         self.image_frame = QVBoxLayout(self.image_preview_frame)
         self.image_frame.addWidget(self.image_preview, alignment=Qt.AlignmentFlag.AlignCenter)
+
         self.file_list = QListWidget()
         self.file_list.itemDoubleClicked.connect(self.view_metadata)
         self.file_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.file_list.customContextMenuRequested.connect(self.show_context_menu)
-        self.view_metadata_button = QPushButton('View Metadata')
+        self.file_list.setMinimumWidth(300)
+
+        self.view_metadata_button = QPushButton('View')
         self.view_metadata_button.clicked.connect(self.view_metadata)
-        #self.filename_edit = QLineEdit()
+
         self.selected_file = QLineEdit()
+
         self.browse_button = QPushButton('Browse')
         self.browse_button.clicked.connect(self.open_file_dialog)
-        self.clear_list_button = QPushButton('Clear List')
+        self.clear_list_button = QPushButton('Clear')
         self.clear_list_button.clicked.connect(self.clear_file_list)
 
-        # Layout
+        #layout
         layout = QGridLayout(self)
-        #layout.addWidget(QLabel('Selected Images:'), 0, 0)
         layout.addWidget(self.file_list, 1, 0, 1, 3)
         layout.addWidget(self.view_metadata_button, 2, 0)
-        layout.addWidget(self.clear_list_button, 2, 1)
-        layout.addWidget(QLabel('Selected File:'), 3, 0)
+        layout.addWidget(self.browse_button, 2, 1)
+        layout.addWidget(self.clear_list_button, 2, 2)
+        layout.addWidget(QLabel('Selected file:'), 3, 0)
         layout.addWidget(self.selected_file, 3, 1, 1, 5)
         layout.addWidget(self.image_preview_frame, 1, 3, 1, 2)
-        #layout.addWidget(self.browse_button, 4, 0, 1, 2)
 
         #set stretch factors
         layout.setColumnStretch(0, 1)
         layout.setColumnStretch(1, 1)
-        layout.setColumnStretch(2, 2)  # This column will take twice as much space as the others
+        layout.setColumnStretch(2, 1)  # This column will take twice as much space as the others
 
         #set alignments
         layout.setAlignment(Qt.AlignmentFlag.AlignTop)
@@ -76,8 +77,7 @@ class MainWindow(QWidget):
             ('Lora:', QLineEdit(), 'lora'),
             ('Raw:', QTextEdit(), 'raw')
         ]
-        #layout.addWidget(self.filename_edit, 0, 1)
-        layout.addWidget(self.browse_button, 2, 2)
+
         for row, (label_text, widget, widget_name) in enumerate(self.widget_info):
             label = QLabel(label_text)
             setattr(self, widget_name, widget)  # Set widget as an attribute of the class
@@ -139,9 +139,15 @@ class MainWindow(QWidget):
 
     def show_context_menu(self, event):
         menu = QMenu(self)
+        add_action = QAction("Add", self)
+        add_action.triggered.connect(self.open_file_dialog)
         remove_action = QAction("Remove", self)
         remove_action.triggered.connect(self.remove_selected_item)
+        clear_action = QAction("Clear", self)
+        clear_action.triggered.connect(self.clear_file_list)
+        menu.addAction(add_action)
         menu.addAction(remove_action)
+        menu.addAction(clear_action)
         menu.exec(self.file_list.mapToGlobal(event))
 
     def remove_selected_item(self):
