@@ -10,7 +10,8 @@ How to use
 -----------
 Download EXE from [releases](https://duckduckgo.com) and run
 
-Drag and drop images/right click to add and remove images
+- Drag and drop multiple images at once
+- Right click on items to remove
 
 Build (for Linux/MacOS)
 -----------
