@@ -11,7 +11,8 @@ class MainWindow(QWidget):
         super().__init__(*args, **kwargs)
 
         self.setWindowTitle('SD Image Metadata')
-        self.setFixedSize(480, 720)
+        #self.setFixedSize(480, 720)
+        self.setGeometry(100, 100, 400, 200)
 
         # UI components
         
@@ -63,6 +64,7 @@ class MainWindow(QWidget):
             ('Size:', QLineEdit(), 'size'),
             ('Model hash:', QLineEdit(), 'model_hash'),
             ('Model:', QLineEdit(), 'model'),
+            ('Raw:', QTextEdit(), 'raw')
         ]
         #layout.addWidget(self.filename_edit, 0, 1)
         layout.addWidget(self.browse_button, 2, 2)
@@ -119,7 +121,10 @@ class MainWindow(QWidget):
                 else:
                     data = image.getInfo()
                     for _, widget, key in self.widget_info:
-                        widget.setText(data[key])
+                        if key == 'raw':
+                            widget.setText(image.getRaw())
+                        else:
+                            widget.setText(data[key])
 
     def show_context_menu(self, event):
         menu = QMenu(self)
