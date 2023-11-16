@@ -1,6 +1,7 @@
 from PIL import Image
 import re
 import filetype
+import json
 from io import BytesIO
 
 class ImageProcess:
@@ -12,10 +13,8 @@ class ImageProcess:
             self.image = Image.open(fn)
             self.image.load()
             self.compatible = False
-            if 'parameters' in self.image.info:
-                self.info = str(self.image.info['parameters'])
-                self.compatible = True
-                self.data = {"prompt": "", 
+            self.metadata_type = 'parameters'
+            self.data = {"prompt": "", 
                             "nprompt": "", 
                             "steps": "", 
                             "sampler": "", 
@@ -25,32 +24,57 @@ class ImageProcess:
                             "model_hash": "",
                             "model": "",
                             "lora": ""}
+
+            if 'parameters' in self.image.text:
+                self.info = str(self.image.text['parameters'])
+                self.metadata_type = 'parameters'
+                self.compatible = True
+    
+            elif 'Comment' in self.image.text:
+                self.info = json.loads(self.image.text['Comment'])
+                self.metadata_type = 'comment'
+                self.compatible = True
+
         else:
             self.compatible = False
 
     def getInfo(self):
-        positive = str(re.split(r'Negative prompt: |Steps: ', self.info)[0])
-        self.data["prompt"]=positive
-        negative = str(re.split(r'Negative prompt: |Steps: ', self.info)[1])
-        self.data["nprompt"]=negative
-        steps = str(re.split(r',' ,re.split(r'Steps: ', self.info)[1])[0])
-        self.data["steps"]=steps
-        sampler = str(re.split(r',' ,re.split(r'Sampler: ', self.info)[1])[0])
-        self.data["sampler"]=sampler
-        cfg_scale = str(re.split(r',' ,re.split(r'CFG scale: ', self.info)[1])[0])
-        self.data["cfg_scale"]=cfg_scale
-        seed = str(re.split(r',' ,re.split(r'Seed: ', self.info)[1])[0])
-        self.data["seed"]=seed
-        size = str(re.split(r',', re.split(r'Size: ', self.info)[1])[0])
-        self.data["size"]=size
-        model_hash = str(re.split(r',' ,re.split(r'Model hash: ', self.info)[1])[0])
-        self.data["model_hash"]=model_hash
-        model = str(re.split(r',' ,re.split(r'Model: ', self.info)[1])[0])
-        self.data["model"]=model
-        lora_tags = re.findall(r'<lora:[^>]+>', self.info)
-        lora_string = ' '.join(lora_tags)
-        self.data["lora"] = lora_string
-        return self.data
+        if self.metadata_type == 'parameters':
+            positive = str(re.split(r'Negative prompt: |Steps: ', self.info)[0])
+            self.data["prompt"]=positive
+            negative = str(re.split(r'Negative prompt: |Steps: ', self.info)[1])
+            self.data["nprompt"]=negative
+            steps = str(re.split(r',' ,re.split(r'Steps: ', self.info)[1])[0])
+            self.data["steps"]=steps
+            sampler = str(re.split(r',' ,re.split(r'Sampler: ', self.info)[1])[0])
+            self.data["sampler"]=sampler
+            cfg_scale = str(re.split(r',' ,re.split(r'CFG scale: ', self.info)[1])[0])
+            self.data["cfg_scale"]=cfg_scale
+            seed = str(re.split(r',' ,re.split(r'Seed: ', self.info)[1])[0])
+            self.data["seed"]=seed
+            size = str(re.split(r',', re.split(r'Size: ', self.info)[1])[0])
+            self.data["size"]=size
+            model_hash = str(re.split(r',' ,re.split(r'Model hash: ', self.info)[1])[0])
+            self.data["model_hash"]=model_hash
+            model = str(re.split(r',' ,re.split(r'Model: ', self.info)[1])[0])
+            self.data["model"]=model
+            lora_tags = re.findall(r'<lora:[^>]+>', self.info)
+            lora_string = ' '.join(lora_tags)
+            self.data["lora"] = lora_string
+            return self.data
+        if self.metadata_type == 'comment':
+            print(type(self.data))
+            self.data["prompt"] = str(self.info["prompt"])
+            self.data["nprompt"] = str(self.info["uc"])
+            self.data["steps"] = str(self.info["steps"])
+            self.data["sampler"] = str(self.info["sampler"])
+            self.data["cfg_scale"] = str(self.info["scale"])
+            self.data["seed"] = str(self.info["seed"])
+            self.data["size"] = str(self.info["height"])+'x'+str(self.info["width"])
+            self.data["model_hash"] = "N/A"
+            self.data["model"] = "Novel AI"
+            return self.data
+            
     
     def getRaw(self):
         return self.info
@@ -59,8 +83,12 @@ class ImageProcess:
         if self.compatible == False:
             return -1
         else:
-            positive = str(re.split(r'Negative prompt: |Steps: ', self.info)[0])
-            return positive
+            if self.metadata_type == 'parameters':
+                positive = str(re.split(r'Negative prompt: |Steps: ', self.info)[0])
+                return positive
+            if self.metadata_type == 'comment':
+                positive = "nigger"
+                return positive
 
     def negativePrompt(self):
         if self.compatible == False:
