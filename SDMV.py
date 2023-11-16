@@ -1,7 +1,8 @@
 import sys
 from PyQt6.QtWidgets import QApplication, QFileDialog, QWidget, QGridLayout,QLineEdit,QPushButton, QLabel, QTextEdit, QListWidget, QVBoxLayout, QFrame, QMenu, QListWidgetItem, QHBoxLayout
 from PyQt6.QtGui import QPixmap, QIcon, QAction, QDesktopServices
-from PyQt6.QtCore import Qt, QUrl
+from PyQt6.QtCore import Qt
+from pathlib import Path
 from Image import ImageProcess
 from icon import resource_path
 
@@ -82,7 +83,6 @@ class MainWindow(QWidget):
         #enable drop events
         self.setAcceptDrops(True)
 
-
         self.widget_info = [
             ('Positive prompt:', QTextEdit(), 'prompt'),
             ('Negative prompt:', QTextEdit(), 'nprompt'),
@@ -137,20 +137,28 @@ class MainWindow(QWidget):
             pixmap = QPixmap(selected_file)
             self.image_preview.setPixmap(pixmap.scaledToWidth(self.image_preview_frame.width(), Qt.TransformationMode.FastTransformation))
 
-            with open(selected_file, 'rb') as file:
-                image = ImageProcess(file)
-                prompt = image.positivePrompt()
+            if Path(selected_file).exists():
+                pixmap = QPixmap(selected_file)
+                self.image_preview.setPixmap(pixmap.scaledToWidth(self.image_preview_frame.width(), Qt.TransformationMode.FastTransformation))
 
-                if prompt == -1:
-                    for _, widget, _ in self.widget_info:
-                        widget.setText('')
-                else:
-                    data = image.getInfo()
-                    for _, widget, key in self.widget_info:
-                        if key == 'raw':
-                            widget.setText(str(image.getRaw()))
-                        else:
-                            widget.setText(data[key])
+                with open(selected_file, 'rb') as file:
+                    image = ImageProcess(file)
+                    prompt = image.positivePrompt()
+
+                    if prompt == -1:
+                        for _, widget, _ in self.widget_info:
+                            widget.setText('')
+                    else:
+                        data = image.getInfo()
+                        for _, widget, key in self.widget_info:
+                            if key == 'raw':
+                                widget.setText(str(image.getRaw()))
+                            else:
+                                widget.setText(data[key])
+            else:
+                self.image_preview.clear()
+                self.selected_file.clear()
+                self.remove_selected_item()
 
     def show_context_menu(self, event):
         menu = QMenu(self)
