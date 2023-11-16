@@ -63,7 +63,6 @@ class ImageProcess:
             self.data["lora"] = lora_string
             return self.data
         if self.metadata_type == 'comment':
-            print(type(self.data))
             self.data["prompt"] = str(self.info["prompt"])
             self.data["nprompt"] = str(self.info["uc"])
             self.data["steps"] = str(self.info["steps"])
@@ -71,7 +70,6 @@ class ImageProcess:
             self.data["cfg_scale"] = str(self.info["scale"])
             self.data["seed"] = str(self.info["seed"])
             self.data["size"] = str(self.info["height"])+'x'+str(self.info["width"])
-            self.data["model_hash"] = "N/A"
             self.data["model"] = "Novel AI"
             return self.data
             

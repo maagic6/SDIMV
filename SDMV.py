@@ -1,7 +1,8 @@
 import sys
 from PyQt6.QtWidgets import QApplication, QFileDialog, QWidget, QGridLayout,QLineEdit,QPushButton, QLabel, QTextEdit, QListWidget, QVBoxLayout, QFrame, QMenu, QListWidgetItem, QHBoxLayout
 from PyQt6.QtGui import QPixmap, QIcon, QAction, QDesktopServices
-from PyQt6.QtCore import Qt, QUrl
+from PyQt6.QtCore import Qt
+from pathlib import Path
 from Image import ImageProcess
 from icon import resource_path
 
@@ -38,10 +39,6 @@ class MainWindow(QWidget):
         self.clear_list_button = QPushButton('Clear')
         self.clear_list_button.clicked.connect(self.clear_file_list)
 
-        github_label = QLabel()
-        github_logo_pixmap = QPixmap('icon/github.png')
-        github_label.setPixmap(github_logo_pixmap.scaledToHeight(20))  
-
         github_link = QLabel('<a href="https://github.com/maagic6/sd_image">GitHub</a>')
         github_link.setOpenExternalLinks(True)
         
@@ -65,7 +62,6 @@ class MainWindow(QWidget):
         grid_layout.addWidget(QLabel('Selected file:'), 3, 0)
         grid_layout.addWidget(self.selected_file, 3, 1, 1, 5)
         grid_layout.addWidget(self.image_preview_frame, 1, 3, 1, 2)
-        bottom_left_layout.addWidget(github_label)
         bottom_left_layout.addWidget(github_link)
         bottom_right_layout.addWidget(version_label)
 
@@ -73,7 +69,7 @@ class MainWindow(QWidget):
         grid_layout.setColumnStretch(0, 1)
         grid_layout.setColumnStretch(1, 1)
         grid_layout.setColumnStretch(2, 1)
-        
+
         #set alignments
         grid_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         grid_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
@@ -86,7 +82,6 @@ class MainWindow(QWidget):
 
         #enable drop events
         self.setAcceptDrops(True)
-
 
         self.widget_info = [
             ('Positive prompt:', QTextEdit(), 'prompt'),
@@ -139,26 +134,31 @@ class MainWindow(QWidget):
             selected_index = self.file_list.row(selected_item)
             selected_file = self.selected_files[selected_index]
             self.selected_file.setText(selected_file)
-
-             # Display image preview
             pixmap = QPixmap(selected_file)
             self.image_preview.setPixmap(pixmap.scaledToWidth(self.image_preview_frame.width(), Qt.TransformationMode.FastTransformation))
 
-            # Process the selected image and display metadata
-            with open(selected_file, 'rb') as file:
-                image = ImageProcess(file)
-                prompt = image.positivePrompt()
+            if Path(selected_file).exists():
+                pixmap = QPixmap(selected_file)
+                self.image_preview.setPixmap(pixmap.scaledToWidth(self.image_preview_frame.width(), Qt.TransformationMode.FastTransformation))
 
-                if prompt == -1:
-                    for _, widget, _ in self.widget_info:
-                        widget.setText('')
-                else:
-                    data = image.getInfo()
-                    for _, widget, key in self.widget_info:
-                        if key == 'raw':
-                            widget.setText(str(image.getRaw()))
-                        else:
-                            widget.setText(data[key])
+                with open(selected_file, 'rb') as file:
+                    image = ImageProcess(file)
+                    prompt = image.positivePrompt()
+
+                    if prompt == -1:
+                        for _, widget, _ in self.widget_info:
+                            widget.setText('')
+                    else:
+                        data = image.getInfo()
+                        for _, widget, key in self.widget_info:
+                            if key == 'raw':
+                                widget.setText(str(image.getRaw()))
+                            else:
+                                widget.setText(data[key])
+            else:
+                self.image_preview.clear()
+                self.selected_file.clear()
+                self.remove_selected_item()
 
     def show_context_menu(self, event):
         menu = QMenu(self)

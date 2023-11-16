@@ -5,7 +5,7 @@ a = Analysis(
     ['SDMV.py'],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=[('icon/emu.ico','icon')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
