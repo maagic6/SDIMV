@@ -135,7 +135,6 @@ class MainWindow(QWidget):
             selected_file = self.selected_files[selected_index]
             self.selected_file.setText(selected_file)
 
-             # Display image preview
             pixmap = QPixmap(selected_file)
             self.image_preview.setPixmap(pixmap.scaledToWidth(self.image_preview_frame.width(), Qt.TransformationMode.FastTransformation))
 
