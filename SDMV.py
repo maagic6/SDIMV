@@ -11,7 +11,7 @@ class MainWindow(QWidget):
         super().__init__(*args, **kwargs)
 
         #window size
-        self.setWindowTitle('SD Image Metadata')
+        self.setWindowTitle('SD Image Metadata Viewer')
         self.setGeometry(100, 100, 400, 200)
 
         #ui components
