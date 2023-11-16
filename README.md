@@ -2,7 +2,7 @@
 
 Standalone program for viewing metadata of stable diffusion generated images
 
-<img src="https://github.com/maagic6/sd_image/assets/80424597/09ac6318-546a-4d72-8d23-19447cae50de" width=20% height=20%>
+<img src="https://github.com/maagic6/sd_image/assets/80424597/d2e815c2-5106-433e-9fd6-9e51e4c92fce" width=20% height=20%>
 
 How to use
 -----------
