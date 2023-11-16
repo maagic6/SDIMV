@@ -1,7 +1,8 @@
 # SD Image Metadata Viewer
 
 Standalone program for viewing metadata of stable diffusion generated images
-Currenly supports for AUTOMATIC1111 web UI and NovelAI images
+
+Currenly supports AUTOMATIC1111 web UI and NovelAI images
 
 <img src="https://github.com/maagic6/sd_image/assets/80424597/26ce22f8-c6f1-45ee-8739-9475e3fc6111" width=20% height=20%>
 
