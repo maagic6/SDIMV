@@ -1,8 +1,7 @@
 import sys
-from PyQt6.QtWidgets import QApplication, QFileDialog, QWidget, QGridLayout,QLineEdit,QPushButton, QLabel, QTextEdit, QListWidget, QVBoxLayout, QFrame, QMenu, QListWidgetItem
-from PyQt6.QtGui import QPixmap, QIcon, QAction
-from PyQt6.QtCore import Qt
-from pathlib import Path
+from PyQt6.QtWidgets import QApplication, QFileDialog, QWidget, QGridLayout,QLineEdit,QPushButton, QLabel, QTextEdit, QListWidget, QVBoxLayout, QFrame, QMenu, QListWidgetItem, QHBoxLayout
+from PyQt6.QtGui import QPixmap, QIcon, QAction, QDesktopServices
+from PyQt6.QtCore import Qt, QUrl
 from Image import ImageProcess
 from icon import resource_path
 
@@ -39,30 +38,55 @@ class MainWindow(QWidget):
         self.clear_list_button = QPushButton('Clear')
         self.clear_list_button.clicked.connect(self.clear_file_list)
 
+        github_label = QLabel()
+        github_logo_pixmap = QPixmap('icon/github.png')
+        github_label.setPixmap(github_logo_pixmap.scaledToHeight(20))  
+
+        github_link = QLabel('<a href="https://github.com/maagic6/sd_image">GitHub</a>')
+        github_link.setOpenExternalLinks(True)
+        
+        version_label = QLabel('Version 1.0.1')
+        version_label.setAlignment(Qt.AlignmentFlag.AlignRight)
+
         #layout
-        layout = QGridLayout(self)
-        layout.addWidget(self.file_list, 1, 0, 1, 3)
-        layout.addWidget(self.view_metadata_button, 2, 0)
-        layout.addWidget(self.browse_button, 2, 1)
-        layout.addWidget(self.clear_list_button, 2, 2)
-        layout.addWidget(QLabel('Selected file:'), 3, 0)
-        layout.addWidget(self.selected_file, 3, 1, 1, 5)
-        layout.addWidget(self.image_preview_frame, 1, 3, 1, 2)
+        layout = QVBoxLayout(self)
+        grid_layout = QGridLayout()
+        bottom_layout = QHBoxLayout()
+        bottom_left_layout = QHBoxLayout()
+        bottom_right_layout = QHBoxLayout()
+        layout.addLayout(grid_layout)
+        layout.addLayout(bottom_layout)
+        bottom_layout.addLayout(bottom_left_layout)
+        bottom_layout.addLayout(bottom_right_layout)
+        grid_layout.addWidget(self.file_list, 1, 0, 1, 3)
+        grid_layout.addWidget(self.view_metadata_button, 2, 0)
+        grid_layout.addWidget(self.browse_button, 2, 1)
+        grid_layout.addWidget(self.clear_list_button, 2, 2)
+        grid_layout.addWidget(QLabel('Selected file:'), 3, 0)
+        grid_layout.addWidget(self.selected_file, 3, 1, 1, 5)
+        grid_layout.addWidget(self.image_preview_frame, 1, 3, 1, 2)
+        bottom_left_layout.addWidget(github_label)
+        bottom_left_layout.addWidget(github_link)
+        bottom_right_layout.addWidget(version_label)
 
         #set stretch factors
-        layout.setColumnStretch(0, 1)
-        layout.setColumnStretch(1, 1)
-        layout.setColumnStretch(2, 1)  # This column will take twice as much space as the others
-
+        grid_layout.setColumnStretch(0, 1)
+        grid_layout.setColumnStretch(1, 1)
+        grid_layout.setColumnStretch(2, 1)
+        
         #set alignments
-        layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-        layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        grid_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        grid_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        bottom_left_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        bottom_right_layout.setAlignment(Qt.AlignmentFlag.AlignRight)
+        bottom_right_layout.setAlignment(Qt.AlignmentFlag.AlignVCenter)
 
         #storage for selected file paths
         self.selected_files = []
 
         #enable drop events
         self.setAcceptDrops(True)
+
 
         self.widget_info = [
             ('Positive prompt:', QTextEdit(), 'prompt'),
@@ -80,13 +104,12 @@ class MainWindow(QWidget):
 
         for row, (label_text, widget, widget_name) in enumerate(self.widget_info):
             label = QLabel(label_text)
-            setattr(self, widget_name, widget)  # Set widget as an attribute of the class
-            widget.setReadOnly(True)  # Set widget properties if needed
-            layout.addWidget(label, row+4, 0, 1, 5)
-            layout.addWidget(widget, row+4, 1, 1, 5)
-      
-        self.show()
+            setattr(self, widget_name, widget)
+            widget.setReadOnly(True)
+            grid_layout.addWidget(label, row+4, 0, 1, 5)
+            grid_layout.addWidget(widget, row+4, 1, 1, 5)
 
+        self.show()
 
     def open_file_dialog(self):
         filenames, _ = QFileDialog.getOpenFileNames(
@@ -171,6 +194,10 @@ class MainWindow(QWidget):
             self.selected_files.extend(new_files)
             self.update_file_list()
             event.acceptProposedAction()
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key.Key_Return:
+            self.view_metadata()
             
 if __name__ == '__main__':
     app = QApplication(sys.argv)
