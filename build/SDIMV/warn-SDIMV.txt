@@ -24,7 +24,6 @@ missing module named pwd - imported by posixpath (delayed, conditional), shutil 
 missing module named org - imported by pickle (optional)
 excluded module named _frozen_importlib - imported by importlib (optional), importlib.abc (optional), zipimport (top-level)
 missing module named _frozen_importlib_external - imported by importlib._bootstrap (delayed), importlib (optional), importlib.abc (optional), zipimport (top-level)
-missing module named _posixsubprocess - imported by subprocess (optional)
 missing module named typing_extensions - imported by packaging.metadata (conditional, optional)
 missing module named _manylinux - imported by pkg_resources._vendor.packaging.tags (delayed, optional), packaging._manylinux (delayed, optional)
 missing module named StringIO - imported by pkg_resources._vendor.six (conditional)
@@ -51,3 +50,4 @@ missing module named olefile - imported by PIL.FpxImagePlugin (top-level), PIL.M
 missing module named numpy - imported by PIL.Image (delayed, conditional, optional)
 missing module named cffi - imported by PIL.Image (optional), PIL.PyAccess (optional)
 missing module named defusedxml - imported by PIL.Image (optional)
+missing module named _posixsubprocess - imported by subprocess (optional)
