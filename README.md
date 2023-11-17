@@ -11,7 +11,7 @@ Usage
 Download EXE from [releases](https://github.com/maagic6/SDIMV/releases)
 
 - **Drag and drop onto the executable:**
-   - Open the program by dragging and dropping one or multiple image files onto the executable which will launch with the added images
+   - Open by dragging and dropping images onto the executable
 
 - **Add images from within the GUI:**
    - Drag images directly into the GUI
@@ -26,4 +26,4 @@ pip install -r requirements.txt
 pip install pyinstaller
 pyinstaller SDIMV.spec
 ```
-Distributable can be found in /dist after building
+Executable can be found in /dist after building
