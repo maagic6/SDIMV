@@ -42,7 +42,7 @@ class MainWindow(QWidget):
         github_link = QLabel('<a href="https://github.com/maagic6/sd_image">GitHub</a>')
         github_link.setOpenExternalLinks(True)
         
-        version_label = QLabel('Version 1.0.1')
+        version_label = QLabel('Version 1.0.2')
         version_label.setAlignment(Qt.AlignmentFlag.AlignRight)
 
         #layout
@@ -105,6 +105,11 @@ class MainWindow(QWidget):
             grid_layout.addWidget(widget, row+4, 1, 1, 5)
 
         self.show()
+
+        #check files in cmd line arguments
+        if len(sys.argv) > 1:
+            self.selected_files.extend(sys.argv[1:])
+            self.update_file_list()
 
     def open_file_dialog(self):
         filenames, _ = QFileDialog.getOpenFileNames(
