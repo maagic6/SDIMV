@@ -39,7 +39,7 @@ class MainWindow(QWidget):
         self.clear_list_button = QPushButton('Clear')
         self.clear_list_button.clicked.connect(self.clear_file_list)
 
-        github_link = QLabel('<a href="https://github.com/maagic6/sd_image">GitHub</a>')
+        github_link = QLabel('<a href="https://github.com/maagic6/SDIMV">GitHub</a>')
         github_link.setOpenExternalLinks(True)
         
         version_label = QLabel('Version 1.0.3')
