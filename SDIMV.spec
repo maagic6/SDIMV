@@ -46,5 +46,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['emu.ico'],
+    icon=['icon/emu.ico'],
 )

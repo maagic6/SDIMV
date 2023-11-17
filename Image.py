@@ -59,7 +59,8 @@ class ImageProcess:
             model = str(re.split(r',' ,re.split(r'Model: ', self.info)[1])[0])
             self.data["model"]=model
             lora_tags = re.findall(r'<lora:[^>]+>', self.info)
-            lora_string = ' '.join(lora_tags)
+            unique_lora_tags = set(lora_tags)
+            lora_string = ' '.join(unique_lora_tags)
             self.data["lora"] = lora_string
             return self.data
         if self.metadata_type == 'comment':
