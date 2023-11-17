@@ -118,8 +118,8 @@ class MainWindow(QWidget):
                 file_path = Path(arg)
                 if file_path.is_dir():
                     new_files.extend(self.get_image_files_from_folder(file_path))
-                elif str(file_path) not in self.selected_files:
-                    new_files.append(str(file_path))
+                elif str(file_path).replace('\\', '/') not in self.selected_files:
+                    new_files.append(str(file_path).replace('\\', '/'))
 
             self.selected_files.extend(new_files)
             self.update_file_list()
@@ -238,18 +238,11 @@ class MainWindow(QWidget):
 
     def get_image_files_from_folder(self, folder_path):
         folder_path = Path(folder_path)
-        
-        # Obtain a list of unique image files in the folder
         png_files = list(folder_path.rglob('*.[pP][nN][gG]'))
         jpg_files = list(folder_path.rglob('*.[jJ][pP][gG]'))
-        
-        # Convert WindowsPath objects to strings with forward slashes
         png_files = [str(file_path).replace('\\', '/') for file_path in png_files]
         jpg_files = [str(file_path).replace('\\', '/') for file_path in jpg_files]
-
         image_files = set(png_files + jpg_files)
-
-        # Filter out files that are already present in self.selected_files
         unique_image_files = list(image_files - set(self.selected_files))
 
         return unique_image_files
