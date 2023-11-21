@@ -29,20 +29,6 @@ class ZoomableGraphicsView(QGraphicsView):
             factor = 1.0 / factor
         self.scale(factor, factor)
 
-class SettingsWindow(QDialog):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setWindowTitle('Settings')
-        self.setGeometry(0, 0, 300, 200)
-
-        layout = QVBoxLayout(self)
-        label = QLabel('Settings go here.')
-        layout.addWidget(label)
-
-        close_button = QPushButton('Close Settings', self)
-        close_button.clicked.connect(self.accept)
-        layout.addWidget(close_button)
-
 class CustomListWidget(QListWidget):
     def wheelEvent(self, event: QWheelEvent):
         current_index = self.currentRow()
@@ -51,31 +37,35 @@ class CustomListWidget(QListWidget):
             return
         new_index = (current_index - 1) % total_items if event.angleDelta().y() > 0 else (current_index + 1) % total_items
         self.setCurrentRow(new_index)
-    
 
 class CustomTitleBar(StandardTitleBar):
     def __init__(self, parent):
         super().__init__(parent)
-
-        # customize the style of title bar button
         self.minBtn.setHoverColor(Qt.GlobalColor.white)
         self.minBtn.setHoverBackgroundColor(QColor(0, 100, 182))
         self.minBtn.setPressedColor(Qt.GlobalColor.white)
         self.minBtn.setPressedBackgroundColor(QColor(54, 57, 65))
-
+        self.minBtn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.maxBtn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.closeBtn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+    
 class MainWindow(FramelessWindow):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
-
         #window size
         self.setTitleBar(CustomTitleBar(self))
         self.setWindowTitle('SD Image Metadata Viewer')
         self.titleBar.raise_()
-        self.setGeometry(100, 100, 640, 820)
+        screen_geometry = QScreen.availableGeometry(QApplication.primaryScreen())
+        self.resize(640,820)
+        qr = self.frameGeometry()
+        cp = self.screen().availableGeometry().center()
+        qr.moveCenter(cp)
+        self.move(qr.topLeft())
+        #self.setGeometry(100, 100, 640, 820)
         self.setMinimumWidth(480)
         icon_path = resource_path("icon/emu.ico")
         self.setWindowIcon(QIcon(icon_path))
-
         self.image_preview_frame = QFrame()
         self.image_preview_frame.setFrameShape(QFrame.Shape.Box)
         self.image_preview_frame.setLineWidth(1)
@@ -111,9 +101,8 @@ class MainWindow(FramelessWindow):
         github_link = QLabel('<a href="https://github.com/maagic6/SDIMV">GitHub</a>')
         github_link.setOpenExternalLinks(True)
         
-        version_label = QLabel('Version 1.0.5')
+        version_label = QLabel('Version 1.1.0')
         version_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-
 
         #layout
         layout = QVBoxLayout(self)
@@ -162,9 +151,10 @@ class MainWindow(FramelessWindow):
             grid_layout.addWidget(widget, row+4, 1, 1, 5)
         #grid_layout.addWidget(self.image_preview_frame, 1, 3, 1, 2)
         bottom_left_layout.addWidget(github_link)
+        github_link.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         #bottom_right_layout.addWidget(settings_button)
         bottom_right_layout.addWidget(version_label)
-
+        version_label.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         #set stretch factors
         grid_layout.setColumnStretch(0, 1)
         grid_layout.setColumnStretch(1, 1)
@@ -205,7 +195,7 @@ class MainWindow(FramelessWindow):
     def open_file_dialog(self):
         filenames, _ = QFileDialog.getOpenFileNames(
             self,
-            "Select Image Files",
+            "Select image files",
             "",
             "Images (*.png *.jpg)"
         )
@@ -353,23 +343,38 @@ class MainWindow(FramelessWindow):
             selected_file = self.selected_files[selected_index]
             subprocess.run(['start', '', selected_file], shell=True)
 
-    def open_settings(self):
-        settings_window = SettingsWindow(self)
-        settings_geometry = settings_window.geometry()
-        center_x = self.geometry().center().x() - settings_geometry.width() / 2
-        center_y = self.geometry().center().y() - settings_geometry.height() / 2
-        settings_window.move(center_x, center_y)
-        settings_window.setModal(True)
-        settings_window.exec()
-
     def update_image(self):
         self.image_view.fitInView(self.image_scene.sceneRect(), Qt.KeepAspectRatio)
-            
-if __name__ == '__main__':
+
+def launch():
     app = QApplication(sys.argv)
+    window_id = 'application'
+    shared_mem_id = 'sharedmemid'
+    semaphore = QSystemSemaphore(window_id, 1)
+    semaphore.acquire()
+    if sys.platform != 'win32':
+        nix_fix_shared_mem = QSharedMemory(shared_mem_id)
+        if nix_fix_shared_mem.attach():
+            nix_fix_shared_mem.detach()
+    shared_memory = QSharedMemory(shared_mem_id)
+    if shared_memory.attach():  # attach a copy of the shared memory, if successful, the application is already running
+        is_running = True
+    else:
+        shared_memory.create(1)  # allocate a shared memory block of 1 byte
+        is_running = False
+
+    semaphore.release()
+
+    if is_running:  # if the application is already running, show the warning message
+        QMessageBox.warning(None, 'Application already running', 'One instance of the application is already running.')
+        return
+    
     app.setStyleSheet(qdarkstyle.load_stylesheet())
     icon_path = resource_path("icon/emu.ico")
     app.setWindowIcon(QIcon(icon_path))
     window = MainWindow()
     window.show()
     sys.exit(app.exec())
+
+if __name__ == '__main__':
+    launch()

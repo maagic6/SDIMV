@@ -1,4 +1,7 @@
 filetype==1.2.0
 Pillow==10.1.0
+Pillow==10.1.0
 PyQt6==6.6.0
+PyQt6_Frameless_Window==0.3.6
 PyQt6_sip==13.6.0
+QDarkStyle==3.2.1

@@ -15,7 +15,7 @@ a = Analysis(
 )
 
 to_keep = []
-to_exclude = {'opengl32sw.dll','Qt6Network.dll','Qt6Pdf.dll','MSVCP140.dll', 'MSVCP140_1.dll', 'MSVCP140_2.dll', 'libcrypto-1_1.dll', 'VCRUNTIME140.dll', 'VCRUNTIME140_1.dll','mfc140u.dll'}
+to_exclude = {'opengl32sw.dll','Qt6Pdf.dll','Qt6Network.dll','MSVCP140.dll', 'MSVCP140_1.dll', 'MSVCP140_2.dll', 'libcrypto-1_1.dll', 'VCRUNTIME140.dll', 'VCRUNTIME140_1.dll','mfc140u.dll'}
 
 for (dest, source, kind) in a.binaries:
     if os.path.split(dest)[1] in to_exclude:
