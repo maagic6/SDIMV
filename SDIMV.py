@@ -1,72 +1,168 @@
-import sys, subprocess
-from PyQt6.QtWidgets import QApplication, QFileDialog, QWidget, QGridLayout,QLineEdit,QPushButton, QLabel, QTextEdit, QListWidget, QVBoxLayout, QFrame, QMenu, QListWidgetItem, QHBoxLayout, QToolButton
-from PyQt6.QtGui import QPixmap, QIcon, QAction, QDesktopServices
-from PyQt6.QtCore import Qt, QUrl
+import sys, subprocess, qdarkstyle
+from PyQt6.QtWidgets import *
+from PyQt6.QtGui import *
+from PyQt6.QtCore import *
 from pathlib import Path
-from itertools import chain
+from qframelesswindow import FramelessWindow, StandardTitleBar
 from Image import ImageProcess
 from icon import resource_path
 
-class MainWindow(QWidget):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        
-        #window size
-        self.setWindowTitle('SD Image Metadata Viewer')
-        self.setGeometry(100, 100, 400, 200)
+class EditableLineEdit(QLineEdit):
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key.Key_Tab:
+            self.focusNextPrevChild(True)
+        else:
+            super().keyPressEvent(event)
 
-        #ui components
-        self.image_preview = QLabel()
+class EditableTextEdit(QTextEdit):
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key.Key_Tab:
+            event.ignore()
+        else:
+            super().keyPressEvent(event)
+
+class ZoomableGraphicsView(QGraphicsView):
+    def wheelEvent(self, event: QWheelEvent):
+        event.accept()
+        factor = 1.2
+        if event.angleDelta().y() < 0:
+            factor = 1.0 / factor
+        self.scale(factor, factor)
+
+class SettingsWindow(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle('Settings')
+        self.setGeometry(0, 0, 300, 200)
+
+        layout = QVBoxLayout(self)
+        label = QLabel('Settings go here.')
+        layout.addWidget(label)
+
+        close_button = QPushButton('Close Settings', self)
+        close_button.clicked.connect(self.accept)
+        layout.addWidget(close_button)
+
+class CustomListWidget(QListWidget):
+    def wheelEvent(self, event: QWheelEvent):
+        current_index = self.currentRow()
+        total_items = self.count()
+        if total_items == 0:
+            return
+        new_index = (current_index - 1) % total_items if event.angleDelta().y() > 0 else (current_index + 1) % total_items
+        self.setCurrentRow(new_index)
+    
+
+class CustomTitleBar(StandardTitleBar):
+    def __init__(self, parent):
+        super().__init__(parent)
+
+        # customize the style of title bar button
+        self.minBtn.setHoverColor(Qt.GlobalColor.white)
+        self.minBtn.setHoverBackgroundColor(QColor(0, 100, 182))
+        self.minBtn.setPressedColor(Qt.GlobalColor.white)
+        self.minBtn.setPressedBackgroundColor(QColor(54, 57, 65))
+
+class MainWindow(FramelessWindow):
+    def __init__(self, parent=None):
+        super().__init__(parent=parent)
+
+        #window size
+        self.setTitleBar(CustomTitleBar(self))
+        self.setWindowTitle('SD Image Metadata Viewer')
+        self.titleBar.raise_()
+        self.setGeometry(100, 100, 640, 820)
+        self.setMinimumWidth(480)
+        icon_path = resource_path("icon/emu.ico")
+        self.setWindowIcon(QIcon(icon_path))
+
         self.image_preview_frame = QFrame()
         self.image_preview_frame.setFrameShape(QFrame.Shape.Box)
-        self.image_preview_frame.setMinimumSize(200,300)
         self.image_preview_frame.setLineWidth(1)
+        self.image_preview_frame.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.image_frame = QVBoxLayout(self.image_preview_frame)
-        self.image_frame.addWidget(self.image_preview, alignment=Qt.AlignmentFlag.AlignCenter)
-        
-        self.file_list = QListWidget()
-        self.file_list.itemClicked.connect(self.view_metadata)
+
+        self.image_scene = QGraphicsScene()
+        self.image_view = ZoomableGraphicsView(self.image_scene)
+        self.image_view.setRenderHint(QPainter.Antialiasing, True)
+        self.image_view.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)
+        self.image_view.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.image_frame.addWidget(self.image_view)
+     
+        self.file_list = CustomListWidget()
         self.file_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.file_list.customContextMenuRequested.connect(self.show_context_menu)
-        self.file_list.setMinimumWidth(300)
         self.file_list.itemSelectionChanged.connect(self.handle_item_selection_changed)
 
-        self.selected_file = QLineEdit()
+        self.splitter = QSplitter(Qt.Orientation.Horizontal)
+        self.splitter.addWidget(self.file_list)
+        self.splitter.addWidget(self.image_preview_frame)
+        self.splitter.setSizes([1,2])
+        self.splitter.splitterMoved.connect(self.update_image)
 
-        #self.view_metadata_button = QPushButton('View')
-        #self.view_metadata_button.clicked.connect(self.open_image)
+        self.selected_file = QLineEdit()
         self.browse_button = QPushButton('Browse')
         self.browse_button.clicked.connect(self.open_file_dialog)
+        self.browse_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.clear_list_button = QPushButton('Clear')
         self.clear_list_button.clicked.connect(self.clear_file_list)
-        #self.folder_button = QPushButton('Open folder')
-        #self.folder_button.clicked.connect(self.open_folder)
+        self.clear_list_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
         github_link = QLabel('<a href="https://github.com/maagic6/SDIMV">GitHub</a>')
         github_link.setOpenExternalLinks(True)
         
-        version_label = QLabel('Version 1.0.4')
-        version_label.setAlignment(Qt.AlignmentFlag.AlignRight)
+        version_label = QLabel('Version 1.0.5')
+        version_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+
 
         #layout
         layout = QVBoxLayout(self)
-        grid_layout = QGridLayout()
+        layout.setContentsMargins(0,30,0,0)
+        bottom_half = QWidget(self)
+        grid_layout = QGridLayout(bottom_half)
         bottom_layout = QHBoxLayout()
         bottom_left_layout = QHBoxLayout()
         bottom_right_layout = QHBoxLayout()
-        layout.addLayout(grid_layout)
+
+        self.v_splitter = QSplitter(Qt.Orientation.Vertical)
+        self.v_splitter.addWidget(self.splitter)
+        self.v_splitter.addWidget(bottom_half)
+        self.v_splitter.splitterMoved.connect(self.update_image)
+
+        layout.addWidget(self.v_splitter)
         layout.addLayout(bottom_layout)
         bottom_layout.addLayout(bottom_left_layout)
         bottom_layout.addLayout(bottom_right_layout)
-        grid_layout.addWidget(self.file_list, 1, 0, 1, 3)
+        #grid_layout.addWidget(self.splitter, 1, 0, 1, 3)
         #grid_layout.addWidget(self.view_metadata_button, 3, 3)
         grid_layout.addWidget(self.browse_button, 2, 1)
         grid_layout.addWidget(self.clear_list_button, 2, 0)
         #grid_layout.addWidget(self.folder_button, 3, 4)
         grid_layout.addWidget(QLabel('Selected file:'), 3, 0)
         grid_layout.addWidget(self.selected_file, 3, 1, 1, 5)
-        grid_layout.addWidget(self.image_preview_frame, 1, 3, 1, 2)
+        self.widget_info = [
+            ('Positive prompt:', EditableTextEdit(), 'prompt'),
+            ('Negative prompt:', EditableTextEdit(), 'nprompt'),
+            ('Steps:', EditableLineEdit(), 'steps'),
+            ('Sampler:', EditableLineEdit(), 'sampler'),
+            ('CFG scale:', EditableLineEdit(), 'cfg_scale'),
+            ('Seed:', EditableLineEdit(), 'seed'),
+            ('Size:', EditableLineEdit(), 'size'),
+            ('Model hash:', EditableLineEdit(), 'model_hash'),
+            ('Model:', EditableLineEdit(), 'model'),
+            ('LoRA:', EditableLineEdit(), 'lora'),
+            ('Raw:', EditableTextEdit(), 'raw')
+        ]
+
+        for row, (label_text, widget, widget_name) in enumerate(self.widget_info):
+            label = QLabel(label_text)
+            setattr(self, widget_name, widget)
+            #widget.setReadOnly(True)
+            grid_layout.addWidget(label, row+4, 0, 1, 5)
+            grid_layout.addWidget(widget, row+4, 1, 1, 5)
+        #grid_layout.addWidget(self.image_preview_frame, 1, 3, 1, 2)
         bottom_left_layout.addWidget(github_link)
+        #bottom_right_layout.addWidget(settings_button)
         bottom_right_layout.addWidget(version_label)
 
         #set stretch factors
@@ -75,6 +171,9 @@ class MainWindow(QWidget):
         grid_layout.setColumnStretch(2, 1)
         grid_layout.setColumnStretch(3, 1)
         grid_layout.setColumnStretch(4, 1)
+        self.v_splitter.setStretchFactor(0, 3)
+        self.v_splitter.setStretchFactor(1, 1)
+        bottom_half.setMinimumHeight(400)
 
         #set alignments
         grid_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
@@ -88,27 +187,6 @@ class MainWindow(QWidget):
 
         #enable drop events
         self.setAcceptDrops(True)
-
-        self.widget_info = [
-            ('Positive prompt:', QTextEdit(), 'prompt'),
-            ('Negative prompt:', QTextEdit(), 'nprompt'),
-            ('Steps:', QLineEdit(), 'steps'),
-            ('Sampler:', QLineEdit(), 'sampler'),
-            ('CFG scale:', QLineEdit(), 'cfg_scale'),
-            ('Seed:', QLineEdit(), 'seed'),
-            ('Size:', QLineEdit(), 'size'),
-            ('Model hash:', QLineEdit(), 'model_hash'),
-            ('Model:', QLineEdit(), 'model'),
-            ('LoRA:', QLineEdit(), 'lora'),
-            ('Raw:', QTextEdit(), 'raw')
-        ]
-
-        for row, (label_text, widget, widget_name) in enumerate(self.widget_info):
-            label = QLabel(label_text)
-            setattr(self, widget_name, widget)
-            widget.setReadOnly(True)
-            grid_layout.addWidget(label, row+4, 0, 1, 5)
-            grid_layout.addWidget(widget, row+4, 1, 1, 5)
 
         self.show()
 
@@ -154,7 +232,7 @@ class MainWindow(QWidget):
     def clear_file_list(self):
         self.selected_files = []
         self.update_file_list()
-        self.image_preview.clear()
+        self.image_scene.clear()
         self.selected_file.clear()
         for _, widget, _ in self.widget_info:
             widget.clear()
@@ -165,12 +243,15 @@ class MainWindow(QWidget):
             selected_index = self.file_list.row(selected_item)
             selected_file = self.selected_files[selected_index]
             self.selected_file.setText(selected_file)
-            pixmap = QPixmap(selected_file)
-            self.image_preview.setPixmap(pixmap.scaledToWidth(self.image_preview_frame.width(), Qt.TransformationMode.FastTransformation))
 
             if Path(selected_file).exists():
                 pixmap = QPixmap(selected_file)
-                self.image_preview.setPixmap(pixmap.scaledToWidth(self.image_preview_frame.width(), Qt.TransformationMode.FastTransformation))
+                self.image_scene.clear()
+                self.image_scene.addPixmap(pixmap)
+                self.image_view.resetTransform()
+                self.image_scene.setSceneRect(QRectF(pixmap.rect()))
+                self.image_view.setScene(self.image_scene)
+                self.image_view.fitInView(self.image_scene.sceneRect(), Qt.KeepAspectRatio)
 
                 with open(selected_file, 'rb') as file:
                     image = ImageProcess(file)
@@ -187,7 +268,7 @@ class MainWindow(QWidget):
                             else:
                                 widget.setText(data[key])
             else:
-                self.image_preview.clear()
+                self.image_scene.clear()
                 self.selected_file.clear()
                 for _, widget, _ in self.widget_info:
                     widget.clear()
@@ -205,6 +286,10 @@ class MainWindow(QWidget):
         menu.addAction(openfolder_action)
         menu.addAction(remove_action)
         menu.exec(self.file_list.mapToGlobal(event))
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.update_image()
 
     def remove_selected_item(self):
         selected_item = self.file_list.currentItem()
@@ -230,7 +315,6 @@ class MainWindow(QWidget):
                     new_files.extend(self.get_image_files_from_folder(file_path))
                 elif file_path not in self.selected_files:
                     new_files.append(file_path)
-            print(new_files)
 
             self.selected_files.extend(new_files)
             self.update_file_list()
@@ -246,10 +330,6 @@ class MainWindow(QWidget):
         unique_image_files = list(image_files - set(self.selected_files))
 
         return unique_image_files
-
-    def keyPressEvent(self, event):
-        if event.key() == Qt.Key.Key_Return:
-            self.view_metadata(self.file_list.currentItem())
     
     def handle_item_selection_changed(self):
         selected_item = self.file_list.currentItem()
@@ -272,10 +352,24 @@ class MainWindow(QWidget):
             selected_index = self.file_list.row(selected_item)
             selected_file = self.selected_files[selected_index]
             subprocess.run(['start', '', selected_file], shell=True)
+
+    def open_settings(self):
+        settings_window = SettingsWindow(self)
+        settings_geometry = settings_window.geometry()
+        center_x = self.geometry().center().x() - settings_geometry.width() / 2
+        center_y = self.geometry().center().y() - settings_geometry.height() / 2
+        settings_window.move(center_x, center_y)
+        settings_window.setModal(True)
+        settings_window.exec()
+
+    def update_image(self):
+        self.image_view.fitInView(self.image_scene.sceneRect(), Qt.KeepAspectRatio)
             
 if __name__ == '__main__':
     app = QApplication(sys.argv)
+    app.setStyleSheet(qdarkstyle.load_stylesheet())
     icon_path = resource_path("icon/emu.ico")
     app.setWindowIcon(QIcon(icon_path))
     window = MainWindow()
+    window.show()
     sys.exit(app.exec())

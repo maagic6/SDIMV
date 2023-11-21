@@ -10,12 +10,12 @@ a = Analysis(
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=[],
+    excludes=['PyQt5','numpy','numpy.libs','win32ui'],
     noarchive=False,
 )
 
 to_keep = []
-to_exclude = {'opengl32sw.dll','Qt6Network.dll','Qt6Pdf.dll','Qt6Svg.dll','MSVCP140.dll', 'MSVCP140_1.dll', 'MSVCP140_2.dll', 'libcrypto-1_1.dll', 'VCRUNTIME140.dll', 'VCRUNTIME140_1.dll'}
+to_exclude = {'opengl32sw.dll','Qt6Network.dll','Qt6Pdf.dll','MSVCP140.dll', 'MSVCP140_1.dll', 'MSVCP140_2.dll', 'libcrypto-1_1.dll', 'VCRUNTIME140.dll', 'VCRUNTIME140_1.dll','mfc140u.dll'}
 
 for (dest, source, kind) in a.binaries:
     if os.path.split(dest)[1] in to_exclude:
@@ -46,4 +46,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['icon/emu.ico'],
+    icon=['icon/emu.ico']
+)
