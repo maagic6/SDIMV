@@ -13,8 +13,6 @@ SDIMV
 
 <p align="center">Standalone program for viewing metadata of stable diffusion generated images</p>
 
-<p align="center">Currently supports AUTOMATIC1111 web UI and NovelAI images</p>
-
 <div align="center">
   <img src="https://github.com/maagic6/SDIMV/assets/80424597/de9f6f55-5d01-4987-ba18-199ea1befa30" width="60%" height="60%">
 </div>
