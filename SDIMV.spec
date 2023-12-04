@@ -8,7 +8,8 @@ a = Analysis(
     datas=[('icon/add.png', 'icon'),
        ('icon/clear.png', 'icon'),
        ('icon/remove.png', 'icon'),
-       ('icon/icon.ico', 'icon')],
+       ('icon/icon.ico', 'icon'),
+       ('icon/about.png','icon')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
@@ -18,7 +19,7 @@ a = Analysis(
 )
 
 to_keep = []
-to_exclude = {'opengl32sw.dll','Qt6Pdf.dll','Qt6OpenGL.dll','Qt6OpenGLWidgets.dll','ffmpegmediaplugin.dll','MSVCP140.dll', 'MSVCP140_1.dll', 'MSVCP140_2.dll', 'libcrypto-1_1.dll', 'VCRUNTIME140.dll', 'VCRUNTIME140_1.dll','mfc140u.dll'}
+to_exclude = {'opengl32sw.dll','Qt6Pdf.dll','Qt6OpenGL.dll','Qt6OpenGLWidgets.dll','QtOpenGL.pyd','QtOpenGLWidgets.pyd','ffmpegmediaplugin.dll','MSVCP140.dll', 'MSVCP140_1.dll', 'MSVCP140_2.dll', 'libcrypto-1_1.dll', 'VCRUNTIME140.dll', 'VCRUNTIME140_1.dll','mfc140u.dll'}
 
 for (dest, source, kind) in a.binaries:
     if os.path.split(dest)[1] in to_exclude:

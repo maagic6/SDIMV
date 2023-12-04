@@ -1,0 +1,84 @@
+
+This file lists modules PyInstaller was not able to find. This does not
+necessarily mean this module is required for running your program. Python and
+Python 3rd-party packages include a lot of conditional or optional modules. For
+example the module 'ntpath' only exists on Windows, whereas the module
+'posixpath' only exists on Posix systems.
+
+Types if import:
+* top-level: imported at the top-level - look at these first
+* conditional: imported within an if-statement
+* delayed: imported within a function
+* optional: imported within a try-except-statement
+
+IMPORTANT: Do NOT post this list to the issue-tracker. Use it as a basis for
+            tracking down the missing module yourself. Thanks!
+
+missing module named pyimod02_importers - imported by C:\Users\Joshua\AppData\Local\Programs\Python\Python39\Lib\site-packages\PyInstaller\hooks\rthooks\pyi_rth_pkgres.py (delayed), C:\Users\Joshua\AppData\Local\Programs\Python\Python39\Lib\site-packages\PyInstaller\hooks\rthooks\pyi_rth_pkgutil.py (delayed)
+missing module named pep517 - imported by importlib.metadata (delayed)
+missing module named org - imported by copy (optional)
+missing module named posix - imported by os (conditional, optional), shutil (conditional)
+missing module named resource - imported by posix (top-level)
+missing module named grp - imported by shutil (optional), tarfile (optional), pathlib (delayed, optional), subprocess (optional)
+missing module named pwd - imported by posixpath (delayed, conditional), shutil (optional), tarfile (optional), pathlib (delayed, conditional, optional), subprocess (optional), netrc (delayed, conditional), getpass (delayed), distutils.util (delayed, conditional, optional), http.server (delayed, optional), webbrowser (delayed)
+missing module named 'org.python' - imported by pickle (optional), xml.sax (delayed, conditional)
+excluded module named _frozen_importlib - imported by importlib (optional), importlib.abc (optional), zipimport (top-level)
+missing module named _frozen_importlib_external - imported by importlib._bootstrap (delayed), importlib (optional), importlib.abc (optional), zipimport (top-level)
+excluded module named win32ui - imported by pywin.dialogs.list (top-level), pywin.mfc.dialog (top-level), pywin.mfc.window (top-level), pywin.mfc.object (top-level), win32com.client.makepy (delayed), pywin.dialogs.status (top-level), pywin.mfc.thread (top-level)
+missing module named 'win32com.gen_py' - imported by win32com (conditional, optional)
+missing module named _manylinux - imported by pkg_resources._vendor.packaging.tags (delayed, optional), packaging._manylinux (delayed, optional)
+missing module named StringIO - imported by pkg_resources._vendor.six (conditional)
+missing module named _scproxy - imported by urllib.request (conditional)
+missing module named termios - imported by getpass (optional), tty (top-level)
+missing module named readline - imported by cmd (delayed, conditional, optional), code (delayed, conditional, optional), pdb (delayed, optional)
+missing module named __builtin__ - imported by pkg_resources._vendor.pyparsing (conditional)
+missing module named ordereddict - imported by pkg_resources._vendor.pyparsing (optional)
+missing module named 'pkg_resources.extern.pyparsing' - imported by pkg_resources._vendor.packaging.markers (top-level), pkg_resources._vendor.packaging.requirements (top-level)
+missing module named 'com.sun' - imported by pkg_resources._vendor.appdirs (delayed, conditional, optional)
+missing module named com - imported by pkg_resources._vendor.appdirs (delayed)
+missing module named _winreg - imported by platform (delayed, optional), pkg_resources._vendor.appdirs (delayed, conditional)
+missing module named pkg_resources.extern.packaging - imported by pkg_resources.extern (top-level), pkg_resources (top-level)
+missing module named pkg_resources.extern.appdirs - imported by pkg_resources.extern (top-level), pkg_resources (top-level)
+missing module named 'pkg_resources.extern.six.moves' - imported by pkg_resources (top-level), pkg_resources._vendor.packaging.requirements (top-level)
+missing module named pkg_resources.extern.six - imported by pkg_resources.extern (top-level), pkg_resources (top-level)
+missing module named 'java.lang' - imported by platform (delayed, optional), xml.sax._exceptions (conditional)
+missing module named vms_lib - imported by platform (delayed, optional)
+missing module named java - imported by platform (delayed)
+missing module named simplejson - imported by requests.compat (conditional, optional)
+missing module named dummy_threading - imported by requests.cookies (optional)
+missing module named zstandard - imported by urllib3.response (optional), urllib3.util.request (optional)
+missing module named brotli - imported by urllib3.response (optional), urllib3.util.request (optional)
+missing module named brotlicffi - imported by urllib3.response (optional), urllib3.util.request (optional)
+missing module named socks - imported by urllib3.contrib.socks (optional)
+missing module named 'typing.io' - imported by importlib.resources (top-level)
+missing module named cryptography - imported by urllib3.contrib.pyopenssl (top-level), requests (conditional, optional)
+missing module named 'OpenSSL.crypto' - imported by urllib3.contrib.pyopenssl (delayed, conditional)
+missing module named 'cryptography.x509' - imported by urllib3.contrib.pyopenssl (delayed, optional)
+missing module named OpenSSL - imported by urllib3.contrib.pyopenssl (top-level)
+missing module named chardet - imported by requests.compat (optional), requests (optional), requests.packages (optional)
+missing module named olefile - imported by PIL.FpxImagePlugin (top-level), PIL.MicImagePlugin (top-level)
+excluded module named numpy - imported by PIL.Image (delayed, conditional, optional)
+missing module named cffi - imported by PIL.Image (optional), PIL.PyAccess (optional)
+missing module named defusedxml - imported by PIL.Image (optional)
+missing module named Quartz - imported by qframelesswindow.utils.mac_utils (top-level)
+missing module named objc - imported by qframelesswindow.utils.mac_utils (top-level), qframelesswindow.mac (top-level)
+missing module named Cocoa - imported by qframelesswindow.utils.mac_utils (top-level), qframelesswindow.mac (top-level), qframelesswindow.mac.window_effect (top-level)
+missing module named 'PyQt5.sip' - imported by qtpy.sip (conditional)
+missing module named 'PySide6.QtDataVisualization' - imported by qtpy.QtDataVisualization (conditional)
+missing module named 'PySide2.QtDataVisualization' - imported by qtpy.QtDataVisualization (conditional)
+missing module named 'PyQt6.QtDataVisualization' - imported by qtpy.QtDataVisualization (conditional, optional)
+missing module named 'PyQt5.QtDataVisualization' - imported by qtpy.QtDataVisualization (conditional, optional)
+missing module named 'PySide6.QtCore' - imported by qtpy (conditional, optional), qtpy.QtCore (conditional)
+missing module named PySide6 - imported by qtpy (conditional, optional)
+missing module named 'PySide2.QtCore' - imported by qtpy (conditional, optional), qtpy.QtCore (conditional)
+missing module named PySide2 - imported by qtpy (conditional, optional)
+missing module named 'PyQt5.QtCore' - imported by qtpy (conditional, optional), qtpy.QtCore (conditional, optional)
+missing module named 'PySide6.QtWidgets' - imported by qtpy.QtWidgets (conditional), qtpy.QtGui (conditional)
+missing module named 'PySide6.QtOpenGL' - imported by qtpy.QtGui (conditional, optional)
+missing module named 'PySide6.QtGui' - imported by qtpy.QtWidgets (conditional), qtpy.QtGui (conditional), qtpy.QtCore (conditional)
+missing module named 'PySide2.QtWidgets' - imported by qtpy.QtWidgets (conditional), qtpy.QtGui (conditional)
+missing module named 'PySide2.QtGui' - imported by qtpy.QtGui (conditional), qtpy.QtCore (conditional, optional)
+missing module named 'PyQt5.QtWidgets' - imported by qtpy.QtWidgets (conditional), qtpy.QtGui (conditional)
+missing module named 'PyQt5.QtGui' - imported by qtpy.QtGui (conditional)
+missing module named 'PySide6.QtOpenGLWidgets' - imported by qtpy.QtWidgets (conditional, optional)
+missing module named _posixsubprocess - imported by subprocess (optional)

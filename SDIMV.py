@@ -28,6 +28,7 @@ from image import imageProcess
 from file_handler import FileHandler
 from custom_widgets import CustomDockWidget, CustomLineEdit, CustomTextEdit, CustomListWidget, CustomTitleBar, ZoomableGraphicsView
 from icon import resource_path
+from about_dialog import AboutDialog
     
 class MainWindow(FramelessMainWindow):
     def __init__(self):
@@ -57,15 +58,19 @@ class MainWindow(FramelessMainWindow):
         iconPath2 = resource_path("icon/add.png")
         iconPath3 = resource_path("icon/remove.png")
         iconPath4 = resource_path("icon/clear.png")
-        action1 = QAction(QIcon(iconPath2), "Add", self)
-        action1.triggered.connect(self.fileHandler.openFileDialog)
-        action2 = QAction(QIcon(iconPath3), "Remove", self)
-        action2.triggered.connect(self.fileHandler.removeSelectedItem)
-        action3 = QAction(QIcon(iconPath4), "Clear", self)
-        action3.triggered.connect(self.fileHandler.clearFileList)
-        toolbar.addAction(action1)
-        toolbar.addAction(action2)
-        toolbar.addAction(action3)
+        iconPath5 = resource_path("icon/about.png")
+        addAction = QAction(QIcon(iconPath2), "Add", self)
+        addAction.triggered.connect(self.fileHandler.openFileDialog)
+        removeAction = QAction(QIcon(iconPath3), "Remove", self)
+        removeAction.triggered.connect(self.fileHandler.removeSelectedItem)
+        clearAction = QAction(QIcon(iconPath4), "Clear", self)
+        clearAction.triggered.connect(self.fileHandler.clearFileList)
+        aboutAction = QAction(QIcon(iconPath5), "About", self)
+        aboutAction.triggered.connect(self.showAboutDialog)
+        toolbar.addAction(addAction)
+        toolbar.addAction(removeAction)
+        toolbar.addAction(clearAction)
+        toolbar.addAction(aboutAction)
         toolbar.setObjectName("Toolbar")
         self.addToolBar(toolbar)
         self.imagePreviewFrame = QFrame()
@@ -126,7 +131,7 @@ class MainWindow(FramelessMainWindow):
             self.gridLayout.addWidget(widget, 2*row+5+1, 0, 1, 5)
 
 
-        #set stretch factors
+        # set stretch factors
         self.gridLayout.setColumnStretch(0, 1)
         self.gridLayout.setColumnStretch(1, 1)
         self.gridLayout.setColumnStretch(2, 1)
@@ -134,7 +139,7 @@ class MainWindow(FramelessMainWindow):
         self.gridLayout.setColumnStretch(4, 1)
         bottomHalf.setMinimumHeight(1)
 
-        #set alignments
+        # set alignments
         self.gridLayout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.gridLayout.setAlignment(Qt.AlignmentFlag.AlignLeft)
 
@@ -183,10 +188,10 @@ class MainWindow(FramelessMainWindow):
         self.metadataWidget.installEventFilter(self)
         self.installEventFilter(self)
 
-        #load settings
+        # load settings
         self.loadSettings()
 
-        #enable drop events
+        # enable drop events
         self.setAcceptDrops(True)
 
         self.show()
@@ -266,7 +271,7 @@ class MainWindow(FramelessMainWindow):
                 self.selectedFile.clear()
                 for _, widget, _ in self.widgetInfo:
                     widget.clear()
-                self.removeSelectedItem()
+                self.fileHandler.removeSelectedItem()
         else:
             self.cleanup()
             self.imageScene.clear()
@@ -315,11 +320,11 @@ class MainWindow(FramelessMainWindow):
                 if url.isLocalFile():
                     file_path = url.toLocalFile()
                     if Path(file_path).is_dir() or Path(file_path).suffix.lower() in ['.png', '.gif', '.webp', '.mp4']:
-                        # Accept local files
+                        # accept local files
                         event.acceptProposedAction()
                         return
                 elif url.scheme() in ('http', 'https'):
-                    # Accept Discord image links
+                    # accept image links
                     event.acceptProposedAction()
                     return
 
@@ -343,7 +348,7 @@ class MainWindow(FramelessMainWindow):
                     if downloaded_path and not self.fileHandler.isFileInList(downloaded_path):
                         new_files.append(downloaded_path)
 
-        self.fileHandler.updateFileList(new_files) # refactor
+        self.fileHandler.updateFileList(new_files)
         event.acceptProposedAction()
 
     def handleItemSelectionChanged(self):
@@ -397,7 +402,7 @@ class MainWindow(FramelessMainWindow):
         openfolder_action = QAction("Open folder", self)
         openfolder_action.triggered.connect(self.openFolder)
         remove_action = QAction("Remove", self)
-        remove_action.triggered.connect(self.removeSelectedItem)
+        remove_action.triggered.connect(self.fileHandler.removeSelectedItem)
         menu.addAction(view_action)
         menu.addAction(openfolder_action)
         menu.addAction(remove_action)
@@ -415,6 +420,12 @@ class MainWindow(FramelessMainWindow):
         if selectedItem:
             selectedFile = selectedItem.text()
             subprocess.run(['start', '', selectedFile], shell=True)
+
+    def showAboutDialog(self):
+        self.setEnabled(False)
+        about_dialog = AboutDialog(self)
+        about_dialog.setModal(True)
+        about_dialog.show()
 
 def launch():
     app = QApplication(sys.argv)

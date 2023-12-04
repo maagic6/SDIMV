@@ -63,14 +63,19 @@ class imageProcess:
         elif ft.extension in ['mp4']:
             video = MP4(fn)
             self.data = {}
-            if '\xa9cmt' in video.tags:
-                metadata = video.tags['\xa9cmt']
-                self.metadataType = "video"
-                self.info = json.loads(metadata[0])
-                self.compatible = True
-                video = None
-                del video
-            else:
+            try:
+                if '\xa9cmt' in video.tags:
+                    metadata = video.tags['\xa9cmt']
+                    self.metadataType = "video"
+                    self.info = json.loads(metadata[0])
+                    self.compatible = True
+                    video = None
+                    del video
+                else:
+                    self.compatible = False
+                    video = None
+                    del video
+            except:
                 self.compatible = False
                 video = None
                 del video
@@ -192,9 +197,9 @@ class imageProcess:
                 positive = ""
                 return positive
 
-    def negativePrompt(self):
+    '''def negativePrompt(self):
         if self.compatible == False:
             return -1    
         else:
             negative = ""
-            return negative
+            return negative'''
