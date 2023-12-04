@@ -5,17 +5,21 @@ a = Analysis(
     ['SDIMV.py'],
     pathex=[],
     binaries=[],
-    datas=[('icon/emu.ico','icon')],
+    datas=[('icon/add.png', 'icon'),
+       ('icon/clear.png', 'icon'),
+       ('icon/remove.png', 'icon'),
+       ('icon/icon.ico', 'icon'),
+       ('icon/about.png','icon')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=['PyQt5','numpy','numpy.libs','win32ui'],
+    excludes=['PyQt5','numpy','numpy.libs','win32ui','PyQt6.Qt6OpenGL','PyQt6.Qt6OpenGLWidgets','Pythonwin'],
     noarchive=False,
 )
 
 to_keep = []
-to_exclude = {'opengl32sw.dll','Qt6Pdf.dll','Qt6Network.dll','MSVCP140.dll', 'MSVCP140_1.dll', 'MSVCP140_2.dll', 'libcrypto-1_1.dll', 'VCRUNTIME140.dll', 'VCRUNTIME140_1.dll','mfc140u.dll'}
+to_exclude = {'opengl32sw.dll','Qt6Pdf.dll','Qt6OpenGL.dll','Qt6OpenGLWidgets.dll','QtOpenGL.pyd','QtOpenGLWidgets.pyd','ffmpegmediaplugin.dll','MSVCP140.dll', 'MSVCP140_1.dll', 'MSVCP140_2.dll', 'libcrypto-1_1.dll', 'VCRUNTIME140.dll', 'VCRUNTIME140_1.dll','mfc140u.dll'}
 
 for (dest, source, kind) in a.binaries:
     if os.path.split(dest)[1] in to_exclude:
@@ -46,5 +50,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['icon/emu.ico']
+    icon=['icon/icon.ico']
 )

@@ -1,181 +1,197 @@
 import sys, subprocess, qdarkstyle
-from PyQt6.QtWidgets import *
-from PyQt6.QtGui import *
-from PyQt6.QtCore import *
+from PyQt6.QtWidgets import (
+    QApplication,
+    QFrame,
+    QGraphicsPixmapItem,
+    QGraphicsScene,
+    QGraphicsView,
+    QGridLayout,
+    QLabel,
+    QLineEdit,
+    QMenu,
+    QToolBar,
+    QVBoxLayout,
+    QHBoxLayout,
+    QWidget,
+    QPushButton,
+    QScrollArea,
+    QDockWidget,
+    QMessageBox,
+)
+from PyQt6.QtGui import QIcon, QAction, QFont, QPainter, QMovie, QPixmap, QDesktopServices
+from PyQt6.QtCore import Qt, QRectF, QEvent, QUrl, QSettings, QSystemSemaphore, QSharedMemory
+from PyQt6.QtMultimedia import QMediaPlayer
+from PyQt6.QtMultimediaWidgets import QGraphicsVideoItem
 from pathlib import Path
-from qframelesswindow import FramelessWindow, StandardTitleBar
-from Image import ImageProcess
+from qframelesswindow import FramelessMainWindow
+from image import imageProcess
+from file_handler import FileHandler
+from custom_widgets import CustomDockWidget, CustomLineEdit, CustomTextEdit, CustomListWidget, CustomTitleBar, ZoomableGraphicsView
 from icon import resource_path
-
-class EditableLineEdit(QLineEdit):
-    def keyPressEvent(self, event):
-        if event.key() == Qt.Key.Key_Tab:
-            self.focusNextPrevChild(True)
-        else:
-            super().keyPressEvent(event)
-
-class EditableTextEdit(QTextEdit):
-    def keyPressEvent(self, event):
-        if event.key() == Qt.Key.Key_Tab:
-            event.ignore()
-        else:
-            super().keyPressEvent(event)
-
-class ZoomableGraphicsView(QGraphicsView):
-    def wheelEvent(self, event: QWheelEvent):
-        event.accept()
-        factor = 1.2
-        if event.angleDelta().y() < 0:
-            factor = 1.0 / factor
-        self.scale(factor, factor)
-
-class CustomListWidget(QListWidget):
-    def wheelEvent(self, event: QWheelEvent):
-        current_index = self.currentRow()
-        total_items = self.count()
-        if total_items == 0:
-            return
-        new_index = (current_index - 1) % total_items if event.angleDelta().y() > 0 else (current_index + 1) % total_items
-        self.setCurrentRow(new_index)
-
-class CustomTitleBar(StandardTitleBar):
-    def __init__(self, parent):
-        super().__init__(parent)
-        self.minBtn.setHoverColor(Qt.GlobalColor.white)
-        self.minBtn.setHoverBackgroundColor(QColor(0, 100, 182))
-        self.minBtn.setPressedColor(Qt.GlobalColor.white)
-        self.minBtn.setPressedBackgroundColor(QColor(54, 57, 65))
-        self.minBtn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.maxBtn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.closeBtn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+from about_dialog import AboutDialog
     
-class MainWindow(FramelessWindow):
-    def __init__(self, parent=None):
-        super().__init__(parent=parent)
+class MainWindow(FramelessMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.fileHandler = FileHandler(self)
         #window size
         self.setTitleBar(CustomTitleBar(self))
-        self.setWindowTitle('SD Image Metadata Viewer')
+        self.setWindowTitle('SDIMV')
         self.titleBar.raise_()
-        screen_geometry = QScreen.availableGeometry(QApplication.primaryScreen())
-        self.resize(640,820)
+        self.settings = QSettings("maagic6", "SDIMV")
+        savedGeometry = self.settings.value("main_window_geometry")
+        if savedGeometry is not None:
+            self.restoreGeometry(savedGeometry)
+        else:
+            self.resize(720,720)
         qr = self.frameGeometry()
         cp = self.screen().availableGeometry().center()
         qr.moveCenter(cp)
         self.move(qr.topLeft())
-        #self.setGeometry(100, 100, 640, 820)
-        self.setMinimumWidth(480)
-        icon_path = resource_path("icon/emu.ico")
-        self.setWindowIcon(QIcon(icon_path))
-        self.image_preview_frame = QFrame()
-        self.image_preview_frame.setFrameShape(QFrame.Shape.Box)
-        self.image_preview_frame.setLineWidth(1)
-        self.image_preview_frame.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.image_frame = QVBoxLayout(self.image_preview_frame)
+        iconPath = resource_path("icon/icon.ico")
+        self.setWindowIcon(QIcon(iconPath))
 
-        self.image_scene = QGraphicsScene()
-        self.image_view = ZoomableGraphicsView(self.image_scene)
-        self.image_view.setRenderHint(QPainter.Antialiasing, True)
-        self.image_view.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)
-        self.image_view.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.image_frame.addWidget(self.image_view)
+        toolbar = QToolBar("Toolbar")
+        toolbar.setStyleSheet("QToolBar {background: transparent;}"
+                              "QToolButton {background: transparent; border: none;}"
+                              "QToolButton:hover {background: rgba(195, 195, 255, 50);}")
+        iconPath2 = resource_path("icon/add.png")
+        iconPath3 = resource_path("icon/remove.png")
+        iconPath4 = resource_path("icon/clear.png")
+        iconPath5 = resource_path("icon/about.png")
+        addAction = QAction(QIcon(iconPath2), "Add", self)
+        addAction.triggered.connect(self.fileHandler.openFileDialog)
+        removeAction = QAction(QIcon(iconPath3), "Remove", self)
+        removeAction.triggered.connect(self.fileHandler.removeSelectedItem)
+        clearAction = QAction(QIcon(iconPath4), "Clear", self)
+        clearAction.triggered.connect(self.fileHandler.clearFileList)
+        aboutAction = QAction(QIcon(iconPath5), "About", self)
+        aboutAction.triggered.connect(self.showAboutDialog)
+        toolbar.addAction(addAction)
+        toolbar.addAction(removeAction)
+        toolbar.addAction(clearAction)
+        toolbar.addAction(aboutAction)
+        toolbar.setObjectName("Toolbar")
+        self.addToolBar(toolbar)
+        self.imagePreviewFrame = QFrame()
+        self.imagePreviewFrame.setFrameShape(QFrame.Shape.Box)
+        self.imagePreviewFrame.setLineWidth(1)
+        self.imagePreviewFrame.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.imageFrame = QVBoxLayout()
+        self.imagePreviewFrame.setLayout(self.imageFrame)
+
+        self.imageScene = QGraphicsScene()
+        self.imageView = ZoomableGraphicsView(self.imageScene)
+        self.imageView.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+        self.imageView.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)
+        self.imageView.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.imageFrame.addWidget(self.imageView)
      
-        self.file_list = CustomListWidget()
-        self.file_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        self.file_list.customContextMenuRequested.connect(self.show_context_menu)
-        self.file_list.itemSelectionChanged.connect(self.handle_item_selection_changed)
+        self.fileList = CustomListWidget()
+        self.fileList.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.fileList.customContextMenuRequested.connect(self.showContextMenu)
+        self.fileList.itemSelectionChanged.connect(self.handleItemSelectionChanged)
 
-        self.splitter = QSplitter(Qt.Orientation.Horizontal)
-        self.splitter.addWidget(self.file_list)
-        self.splitter.addWidget(self.image_preview_frame)
-        self.splitter.setSizes([1,2])
-        self.splitter.splitterMoved.connect(self.update_image)
+        self.selectedFile = QLineEdit()
+        self.browseButton = QPushButton('Browse')
+        self.browseButton.clicked.connect(self.fileHandler.openFileDialog)
+        self.browseButton.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.clearButton = QPushButton('Clear')
+        self.clearButton.clicked.connect(self.fileHandler.clearFileList)
+        self.clearButton.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
-        self.selected_file = QLineEdit()
-        self.browse_button = QPushButton('Browse')
-        self.browse_button.clicked.connect(self.open_file_dialog)
-        self.browse_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.clear_list_button = QPushButton('Clear')
-        self.clear_list_button.clicked.connect(self.clear_file_list)
-        self.clear_list_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        bottomHalf = QScrollArea(self)
+        bottomHalf.setWidgetResizable(True)
 
-        github_link = QLabel('<a href="https://github.com/maagic6/SDIMV">GitHub</a>')
-        github_link.setOpenExternalLinks(True)
+        scrollContent = QWidget()
+        self.gridLayout = QGridLayout(scrollContent)
+        bottomHalf.setWidget(scrollContent)
         
-        version_label = QLabel('Version 1.1.0')
-        version_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-
-        #layout
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(0,30,0,0)
-        bottom_half = QWidget(self)
-        grid_layout = QGridLayout(bottom_half)
-        bottom_layout = QHBoxLayout()
-        bottom_left_layout = QHBoxLayout()
-        bottom_right_layout = QHBoxLayout()
-
-        self.v_splitter = QSplitter(Qt.Orientation.Vertical)
-        self.v_splitter.addWidget(self.splitter)
-        self.v_splitter.addWidget(bottom_half)
-        self.v_splitter.splitterMoved.connect(self.update_image)
-
-        layout.addWidget(self.v_splitter)
-        layout.addLayout(bottom_layout)
-        bottom_layout.addLayout(bottom_left_layout)
-        bottom_layout.addLayout(bottom_right_layout)
-        #grid_layout.addWidget(self.splitter, 1, 0, 1, 3)
-        #grid_layout.addWidget(self.view_metadata_button, 3, 3)
-        grid_layout.addWidget(self.browse_button, 2, 1)
-        grid_layout.addWidget(self.clear_list_button, 2, 0)
-        #grid_layout.addWidget(self.folder_button, 3, 4)
-        grid_layout.addWidget(QLabel('Selected file:'), 3, 0)
-        grid_layout.addWidget(self.selected_file, 3, 1, 1, 5)
-        self.widget_info = [
-            ('Positive prompt:', EditableTextEdit(), 'prompt'),
-            ('Negative prompt:', EditableTextEdit(), 'nprompt'),
-            ('Steps:', EditableLineEdit(), 'steps'),
-            ('Sampler:', EditableLineEdit(), 'sampler'),
-            ('CFG scale:', EditableLineEdit(), 'cfg_scale'),
-            ('Seed:', EditableLineEdit(), 'seed'),
-            ('Size:', EditableLineEdit(), 'size'),
-            ('Model hash:', EditableLineEdit(), 'model_hash'),
-            ('Model:', EditableLineEdit(), 'model'),
-            ('LoRA:', EditableLineEdit(), 'lora'),
-            ('Raw:', EditableTextEdit(), 'raw')
+        self.gridLayout.addWidget(QLabel('Selected file:'), 3, 0)
+        self.gridLayout.addWidget(self.selectedFile, 4, 0, 1, 5)
+        self.widgetInfo = [
+            ('Positive prompt:', CustomTextEdit(), 'prompt'),
+            ('Negative prompt:', CustomTextEdit(), 'negative_prompt'),
+            ('Steps:', CustomLineEdit(), 'steps'),
+            ('Sampler:', CustomLineEdit(), 'sampler'),
+            ('CFG scale:', CustomLineEdit(), 'cfg_scale'),
+            ('Seed:', CustomLineEdit(), 'seed'),
+            ('Size:', CustomLineEdit(), 'size'),
+            ('Model hash:', CustomLineEdit(), 'model_hash'),
+            ('Model:', CustomLineEdit(), 'model'),
+            ('LoRA:', CustomLineEdit(), 'lora'),
+            ('Raw:', CustomTextEdit(), 'raw')
         ]
 
-        for row, (label_text, widget, widget_name) in enumerate(self.widget_info):
+        for row, (label_text, widget, widget_name) in enumerate(self.widgetInfo):
             label = QLabel(label_text)
+            setattr(self, widget_name + "_label", label)
             setattr(self, widget_name, widget)
-            #widget.setReadOnly(True)
-            grid_layout.addWidget(label, row+4, 0, 1, 5)
-            grid_layout.addWidget(widget, row+4, 1, 1, 5)
-        #grid_layout.addWidget(self.image_preview_frame, 1, 3, 1, 2)
-        bottom_left_layout.addWidget(github_link)
-        github_link.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        #bottom_right_layout.addWidget(settings_button)
-        bottom_right_layout.addWidget(version_label)
-        version_label.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        #set stretch factors
-        grid_layout.setColumnStretch(0, 1)
-        grid_layout.setColumnStretch(1, 1)
-        grid_layout.setColumnStretch(2, 1)
-        grid_layout.setColumnStretch(3, 1)
-        grid_layout.setColumnStretch(4, 1)
-        self.v_splitter.setStretchFactor(0, 3)
-        self.v_splitter.setStretchFactor(1, 1)
-        bottom_half.setMinimumHeight(400)
+            self.gridLayout.addWidget(label, 2*row+5, 0, 1, 5)
+            self.gridLayout.addWidget(widget, 2*row+5+1, 0, 1, 5)
 
-        #set alignments
-        grid_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-        grid_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
-        bottom_left_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
-        bottom_right_layout.setAlignment(Qt.AlignmentFlag.AlignRight)
-        bottom_right_layout.setAlignment(Qt.AlignmentFlag.AlignVCenter)
 
-        #storage for selected file paths
-        self.selected_files = []
+        # set stretch factors
+        self.gridLayout.setColumnStretch(0, 1)
+        self.gridLayout.setColumnStretch(1, 1)
+        self.gridLayout.setColumnStretch(2, 1)
+        self.gridLayout.setColumnStretch(3, 1)
+        self.gridLayout.setColumnStretch(4, 1)
+        bottomHalf.setMinimumHeight(1)
 
-        #enable drop events
+        # set alignments
+        self.gridLayout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.gridLayout.setAlignment(Qt.AlignmentFlag.AlignLeft)
+
+        self.fileListWidget = CustomDockWidget(self)
+        self.fileListWidget.setObjectName("FileListWidget")
+        titleBarWidget = QWidget(self)
+        titleBarLayout = QHBoxLayout(titleBarWidget)
+        titleLabel = QLabel("File list")
+        titleBarLayout.addWidget(titleLabel, alignment=Qt.AlignmentFlag.AlignHCenter)
+        titleBarLayout.addStretch()
+        titleBarLayout.addWidget(self.browseButton, alignment=Qt.AlignmentFlag.AlignHCenter)
+        titleBarLayout.addWidget(self.clearButton, alignment=Qt.AlignmentFlag.AlignHCenter)
+        titleBarWidget.setMaximumHeight(10)
+        self.fileListWidget.setWidget(self.fileList)
+        self.fileListWidget.setWindowTitle("File list")
+        self.fileList.setAcceptDrops(True)
+        self.fileListWidget.setTitleBarWidget(titleLabel)
+        self.fileListWidget.setAcceptDrops(True)
+        self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.fileListWidget)
+
+        self.imageViewWidget = QDockWidget()
+        self.imageViewWidget.setObjectName("ImageViewWidget")
+        self.imageViewWidget.setWidget(self.imagePreviewFrame)
+        self.imageViewWidget.setFeatures(QDockWidget.DockWidgetFeature.NoDockWidgetFeatures)
+        self.imagePreviewFrame.setAcceptDrops(True)
+        self.imageView.setAcceptDrops(True)
+        self.imageViewWidget.setTitleBarWidget(QLabel("Image view"))
+        self.imageViewWidget.setAllowedAreas(Qt.DockWidgetArea.NoDockWidgetArea)
+        self.imageViewWidget.setAcceptDrops(True)
+        self.setCentralWidget(self.imageViewWidget)
+
+        self.metadataWidget = QDockWidget()
+        self.metadataWidget.setObjectName("MetadataWidget")
+        self.metadataWidget.setWidget(bottomHalf)
+        self.metadataWidget.setTitleBarWidget(QLabel("Metadata"))
+        self.metadataWidget.setWindowTitle("Metadata")
+        self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.metadataWidget)
+        self.setContentsMargins(0,30,0,0)
+        self.isMediaPlayerDeleted = False
+        self.isMovieDeleted = False
+
+        self.fileListWidget.dockLocationChanged.connect(self.updateImageView)
+        self.metadataWidget.dockLocationChanged.connect(self.updateImageView)
+        self.fileListWidget.installEventFilter(self)
+        self.imageViewWidget.installEventFilter(self)
+        self.metadataWidget.installEventFilter(self)
+        self.installEventFilter(self)
+
+        # load settings
+        self.loadSettings()
+
+        # enable drop events
         self.setAcceptDrops(True)
 
         self.show()
@@ -185,166 +201,231 @@ class MainWindow(FramelessWindow):
             for arg in sys.argv[1:]:
                 file_path = Path(arg)
                 if file_path.is_dir():
-                    new_files.extend(self.get_image_files_from_folder(file_path))
-                elif str(file_path).replace('\\', '/') not in self.selected_files:
+                    new_files.extend(self.fileHandler.getFilesFromFolder(file_path))
+                elif not self.fileHandler.isFileInList(str(file_path)):
                     new_files.append(str(file_path).replace('\\', '/'))
 
-            self.selected_files.extend(new_files)
-            self.update_file_list()
+            self.fileHandler.updateFileList(new_files)
 
-    def open_file_dialog(self):
-        filenames, _ = QFileDialog.getOpenFileNames(
-            self,
-            "Select image files",
-            "",
-            "Images (*.png *.jpg)"
-        )
-        if filenames:
-            unique_files = set(filenames) - set(self.selected_files)
-            self.selected_files.extend(unique_files)
-            self.update_file_list()
+    def viewMetadata(self, item):
+        if item:
+            selectedFile = item.text()
+            self.selectedFile.setText(item.text())
 
-    def update_file_list(self):
-        if self.file_list.count() > 0:
-            self.file_list.clear()
-            for file_path in self.selected_files:
-                item = QListWidgetItem(file_path)
-                self.file_list.addItem(item)
-        else:
-            self.file_list.clear()
-            for file_path in self.selected_files:
-                item = QListWidgetItem(file_path)
-                self.file_list.addItem(item)
-            first_item = self.file_list.item(0)
-            self.file_list.setCurrentItem(first_item)
-            self.view_metadata(first_item)
-
-    def clear_file_list(self):
-        self.selected_files = []
-        self.update_file_list()
-        self.image_scene.clear()
-        self.selected_file.clear()
-        for _, widget, _ in self.widget_info:
-            widget.clear()
-
-    def view_metadata(self, item):
-        selected_item = item
-        if selected_item:
-            selected_index = self.file_list.row(selected_item)
-            selected_file = self.selected_files[selected_index]
-            self.selected_file.setText(selected_file)
-
-            if Path(selected_file).exists():
-                pixmap = QPixmap(selected_file)
-                self.image_scene.clear()
-                self.image_scene.addPixmap(pixmap)
-                self.image_view.resetTransform()
-                self.image_scene.setSceneRect(QRectF(pixmap.rect()))
-                self.image_view.setScene(self.image_scene)
-                self.image_view.fitInView(self.image_scene.sceneRect(), Qt.KeepAspectRatio)
-
-                with open(selected_file, 'rb') as file:
-                    image = ImageProcess(file)
+            if Path(selectedFile).exists():
+                if selectedFile.lower().endswith(('.gif','.webp')):
+                    self.cleanup()
+                    self.movie = QMovie(selectedFile)
+                    #self.imageScene.clear()
+                    self.pixmap_item = QGraphicsPixmapItem()
+                    self.imageScene.addItem(self.pixmap_item)
+                    self.isMovieDeleted = False
+                    self.imageView.resetTransform()
+                    self.movie.start()
+                    self.movie.frameChanged.connect(lambda: self.pixmap_item.setPixmap(self.movie.currentPixmap()))
+                    self.imageScene.setSceneRect(QRectF(self.movie.currentPixmap().rect()))
+                    self.imageView.setScene(self.imageScene)
+                    self.imageView.fitInView(self.imageScene.sceneRect(), Qt.AspectRatioMode.KeepAspectRatio)
+                    self.imageView.resetZoom()
+                elif selectedFile.lower().endswith(('.png', '.jpg', '.jpeg','.bmp')):
+                    self.cleanup()
+                    pixmap = QPixmap(selectedFile)
+                    #self.imageScene.clear()
+                    self.imageScene.addPixmap(pixmap)
+                    self.imageView.setScene(self.imageScene)
+                    self.imageView.resetTransform()
+                    self.imageScene.setSceneRect(QRectF(pixmap.rect()))
+                    self.imageView.fitInView(self.imageScene.sceneRect(), Qt.AspectRatioMode.KeepAspectRatio)
+                    self.imageView.resetZoom()
+                elif selectedFile.lower().endswith(('.mp4', '.mpeg4', '.avi')):
+                    self.cleanup()
+                    #self.imageScene.clear()
+                    self.imageView.resetTransform()
+                    self.media_player = QMediaPlayer()
+                    self.video_item = QGraphicsVideoItem()
+                    self.imageScene.addItem(self.video_item)
+                    self.isMediaPlayerDeleted = False
+                    self.media_player.setVideoOutput(self.video_item)
+                    self.media_player.setSource(QUrl.fromLocalFile(selectedFile))
+                    self.media_player.play()
+                    self.media_player.mediaStatusChanged.connect(self.loopVideo)
+                    self.video_item.nativeSizeChanged.connect(self.updateVideoView)
+                    self.imageView.fitInView(self.imageScene.sceneRect(), Qt.AspectRatioMode.KeepAspectRatio) #workaround
+                    self.imageView.resetZoom()
+                with open(selectedFile, 'rb') as file:
+                    image = imageProcess(file)
                     prompt = image.positivePrompt()
-
                     if prompt == -1:
-                        for _, widget, _ in self.widget_info:
+                        for _, widget, _ in self.widgetInfo:
                             widget.setText('')
                     else:
                         data = image.getInfo()
-                        for _, widget, key in self.widget_info:
+                        for _, widget, key in self.widgetInfo:
                             if key == 'raw':
                                 widget.setText(str(image.getRaw()))
                             else:
-                                widget.setText(data[key])
+                                widget.setText(str(data[key]))
             else:
-                self.image_scene.clear()
-                self.selected_file.clear()
-                for _, widget, _ in self.widget_info:
+                self.cleanup()
+                #self.imageScene.clear()
+                self.selectedFile.clear()
+                for _, widget, _ in self.widgetInfo:
                     widget.clear()
-                self.remove_selected_item()
+                self.fileHandler.removeSelectedItem()
+        else:
+            self.cleanup()
+            self.imageScene.clear()
+            self.selectedFile.clear()
+            for _, widget, _ in self.widgetInfo:
+                widget.clear()
 
-    def show_context_menu(self, event):
-        menu = QMenu(self)
-        view_action = QAction("View", self)
-        view_action.triggered.connect(self.open_image)
-        openfolder_action = QAction("Open folder", self)
-        openfolder_action.triggered.connect(self.open_folder)
-        remove_action = QAction("Remove", self)
-        remove_action.triggered.connect(self.remove_selected_item)
-        menu.addAction(view_action)
-        menu.addAction(openfolder_action)
-        menu.addAction(remove_action)
-        menu.exec(self.file_list.mapToGlobal(event))
-
-    def resizeEvent(self, event):
-        super().resizeEvent(event)
-        self.update_image()
-
-    def remove_selected_item(self):
-        selected_item = self.file_list.currentItem()
-        if selected_item:
-            selected_index = self.file_list.row(selected_item)
-            del self.selected_files[selected_index]
-            self.update_file_list()
+    def loopVideo(self, status):
+        if status == QMediaPlayer.MediaStatus.EndOfMedia:
+            self.media_player.setPosition(0)
+            self.media_player.play()
+        else:
+            pass
+    
+    def cleanup(self):
+        if hasattr(self, 'movie') and self.movie is not None and self.isMovieDeleted == False:
+            try:
+                self.movie.frameChanged.disconnect()
+                self.movie.stop()
+                self.imageScene.removeItem(self.pixmap_item)
+                self.movie.deleteLater()
+                del self.movie
+                del self.pixmap_item
+                self.isMovieDeleted = True
+            except TypeError as e:
+                print(f"Exception when disconnecting movie: {e}")
+        if hasattr(self, 'media_player') and self.media_player is not None and self.isMediaPlayerDeleted == False:
+            try:
+                #self.media_player.setSource(QUrl())
+                self.media_player.mediaStatusChanged.disconnect()
+                self.media_player.stop()
+                self.imageScene.removeItem(self.video_item)
+                self.media_player.deleteLater()
+                self.video_item.deleteLater()
+                self.isMediaPlayerDeleted = True
+                #del self.media_player
+                #del self.video_item
+            except Exception as e:
+                print(f"Exception when disconnecting media player: {e}")
+        self.imageScene.clear()
 
     def dragEnterEvent(self, event):
         mime_data = event.mimeData()
-
-        if mime_data.hasUrls() and all(url.isLocalFile() for url in mime_data.urls()):
-            event.acceptProposedAction()
+        if mime_data.hasUrls():
+            for url in mime_data.urls():
+                if url.isLocalFile():
+                    file_path = url.toLocalFile()
+                    if Path(file_path).is_dir() or Path(file_path).suffix.lower() in ['.png', '.gif', '.webp', '.mp4']:
+                        # accept local files
+                        event.acceptProposedAction()
+                        return
+                elif url.scheme() in ('http', 'https'):
+                    # accept image links
+                    event.acceptProposedAction()
+                    return
 
     def dropEvent(self, event):
         mime_data = event.mimeData()
 
-        if mime_data.hasUrls() and all(url.isLocalFile() for url in mime_data.urls()):
+        if mime_data.hasUrls():
             new_files = []
             for url in mime_data.urls():
-                file_path = url.toLocalFile()
-                if Path(file_path).is_dir():
-                    new_files.extend(self.get_image_files_from_folder(file_path))
-                elif file_path not in self.selected_files:
-                    new_files.append(file_path)
+                if url.isLocalFile():
+                    file_path = url.toLocalFile()
+                    if Path(file_path).is_dir():
+                        new_files.extend(self.fileHandler.getFilesFromFolder(file_path))
+                    elif 'Temp' in Path(file_path).parts:
+                        copied_path = self.fileHandler.copyTempImage(file_path)
+                        new_files.append(copied_path)
+                    elif not self.fileHandler.isFileInList(file_path):
+                        new_files.append(file_path)
+                elif url.scheme() == 'http' or url.scheme() == 'https':
+                    downloaded_path = self.fileHandler.downloadImage(url)
+                    if downloaded_path and not self.fileHandler.isFileInList(downloaded_path):
+                        new_files.append(downloaded_path)
 
-            self.selected_files.extend(new_files)
-            self.update_file_list()
-            event.acceptProposedAction()
+        self.fileHandler.updateFileList(new_files)
+        event.acceptProposedAction()
 
-    def get_image_files_from_folder(self, folder_path):
-        folder_path = Path(folder_path)
-        png_files = list(folder_path.rglob('*.[pP][nN][gG]'))
-        jpg_files = list(folder_path.rglob('*.[jJ][pP][gG]'))
-        png_files = [str(file_path).replace('\\', '/') for file_path in png_files]
-        jpg_files = [str(file_path).replace('\\', '/') for file_path in jpg_files]
-        image_files = set(png_files + jpg_files)
-        unique_image_files = list(image_files - set(self.selected_files))
+    def handleItemSelectionChanged(self):
+        selectedItem = self.fileList.currentItem()
+        if selectedItem:
+            self.viewMetadata(selectedItem)
+            #if 0 <= selectedIndex < len(self.selectedFiles):
+                #self.viewMetadata(selectedItem)
 
-        return unique_image_files
+    def updateImageView(self):
+        self.imageView.fitInView(self.imageScene.sceneRect(), Qt.AspectRatioMode.KeepAspectRatio)
+        self.imageView.resetZoom()
+
+    def updateVideoView(self):
+        self.imageView.resetTransform()
+        self.imageScene.setSceneRect(self.video_item.boundingRect())
+        self.imageView.setScene(self.imageScene)
+        self.imageView.fitInView(self.imageScene.sceneRect(), Qt.AspectRatioMode.KeepAspectRatio)
+        self.imageView.resetZoom()
+
+    def saveSettings(self):
+        file_paths = self.fileHandler.getFileList()
+        self.settings.setValue("selectedFiles", file_paths)
+        self.settings.setValue("main_window_state", self.saveState())
+        self.settings.setValue("main_window_geometry", self.saveGeometry())
+
+    def loadSettings(self):
+        file_paths = self.settings.value("selectedFiles", [])
+        self.fileHandler.updateFileList(file_paths)
+        
+        if self.settings.value("main_window_state"):
+            self.restoreState(self.settings.value("main_window_state"))
+
+    def closeEvent(self, event):
+        self.saveSettings()
+        event.accept()
     
-    def handle_item_selection_changed(self):
-        selected_item = self.file_list.currentItem()
-        if selected_item:
-            selected_index = self.file_list.row(selected_item)
-            if 0 <= selected_index < len(self.selected_files):
-                self.view_metadata(selected_item)
+    def eventFilter(self, obj, event):
+        if obj == self:
+            if event.type() == QEvent.Type.Resize:
+                self.updateImageView()
+        if obj in (self.fileListWidget, self.imageViewWidget):
+            if event.type() == QEvent.Type.Move:
+                self.updateImageView()
+        return super(MainWindow, self).eventFilter(obj, event)
 
-    def open_folder(self):
-        selected_item = self.file_list.currentItem()
-        if selected_item:
-            selected_index = self.file_list.row(selected_item)
-            selected_file = self.selected_files[selected_index]
-            folder_path = Path(selected_file).parent
+    def showContextMenu(self, event):
+        menu = QMenu(self)
+        view_action = QAction("View", self)
+        view_action.triggered.connect(self.openImage)
+        openfolder_action = QAction("Open folder", self)
+        openfolder_action.triggered.connect(self.openFolder)
+        remove_action = QAction("Remove", self)
+        remove_action.triggered.connect(self.fileHandler.removeSelectedItem)
+        menu.addAction(view_action)
+        menu.addAction(openfolder_action)
+        menu.addAction(remove_action)
+        menu.exec(self.fileList.mapToGlobal(event))
+
+    def openFolder(self):
+        selectedItem = self.fileList.currentItem()
+        if selectedItem:
+            selectedFile = selectedItem.text()
+            folder_path = Path(selectedFile).parent
             QDesktopServices.openUrl(QUrl.fromLocalFile(str(folder_path)))
+    
+    def openImage(self):
+        selectedItem = self.fileList.currentItem()
+        if selectedItem:
+            selectedFile = selectedItem.text()
+            subprocess.run(['start', '', selectedFile], shell=True)
 
-    def open_image(self):
-        selected_item = self.file_list.currentItem()
-        if selected_item:
-            selected_index = self.file_list.row(selected_item)
-            selected_file = self.selected_files[selected_index]
-            subprocess.run(['start', '', selected_file], shell=True)
-
-    def update_image(self):
-        self.image_view.fitInView(self.image_scene.sceneRect(), Qt.KeepAspectRatio)
+    def showAboutDialog(self):
+        self.setEnabled(False)
+        about_dialog = AboutDialog(self)
+        about_dialog.setModal(True)
+        about_dialog.show()
 
 def launch():
     app = QApplication(sys.argv)
@@ -357,21 +438,23 @@ def launch():
         if nix_fix_shared_mem.attach():
             nix_fix_shared_mem.detach()
     shared_memory = QSharedMemory(shared_mem_id)
-    if shared_memory.attach():  # attach a copy of the shared memory, if successful, the application is already running
+    if shared_memory.attach():
         is_running = True
     else:
-        shared_memory.create(1)  # allocate a shared memory block of 1 byte
+        shared_memory.create(1)
         is_running = False
 
     semaphore.release()
 
-    if is_running:  # if the application is already running, show the warning message
+    if is_running:
         QMessageBox.warning(None, 'Application already running', 'One instance of the application is already running.')
         return
     
     app.setStyleSheet(qdarkstyle.load_stylesheet())
-    icon_path = resource_path("icon/emu.ico")
-    app.setWindowIcon(QIcon(icon_path))
+    iconPath = resource_path("icon/icon.ico")
+    app.setWindowIcon(QIcon(iconPath))
+    font = QFont("Segoe UI", 10)
+    app.setFont(font)
     window = MainWindow()
     window.show()
     sys.exit(app.exec())
