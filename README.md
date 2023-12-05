@@ -26,7 +26,6 @@ Features
 - Supports AUTOMATIC1111 web UI, NovelAI, and ComfyUI* png images
 - Supports AUTOMATIC1111 web UI jpg images
 - Supports PixAI mp4 animations
-- Supports viewing of webp images
 - Resizing and rearranging of UI
 - Drag and drop images/folders
   
