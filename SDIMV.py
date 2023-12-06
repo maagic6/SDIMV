@@ -24,7 +24,7 @@ from PyQt6.QtMultimedia import QMediaPlayer
 from PyQt6.QtMultimediaWidgets import QGraphicsVideoItem
 from pathlib import Path
 from qframelesswindow import FramelessMainWindow
-from image import imageProcess
+from image import ImageProcess
 from file_handler import FileHandler
 from custom_widgets import CustomDockWidget, CustomLineEdit, CustomTextEdit, CustomListWidget, CustomTitleBar, ZoomableGraphicsView
 from icon import resource_path
@@ -39,11 +39,7 @@ class MainWindow(FramelessMainWindow):
         self.setWindowTitle('SDIMV')
         self.titleBar.raise_()
         self.settings = QSettings("maagic6", "SDIMV")
-        savedGeometry = self.settings.value("main_window_geometry")
-        if savedGeometry is not None:
-            self.restoreGeometry(savedGeometry)
-        else:
-            self.resize(720,720)
+        #self.settings.clear()
         qr = self.frameGeometry()
         cp = self.screen().availableGeometry().center()
         qr.moveCenter(cp)
@@ -91,6 +87,7 @@ class MainWindow(FramelessMainWindow):
         self.fileList.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.fileList.customContextMenuRequested.connect(self.showContextMenu)
         self.fileList.itemSelectionChanged.connect(self.handleItemSelectionChanged)
+        self.fileList.setViewMode(CustomListWidget.ViewMode.IconMode)
 
         self.selectedFile = QLineEdit()
         self.browseButton = QPushButton('Browse')
@@ -209,8 +206,8 @@ class MainWindow(FramelessMainWindow):
 
     def viewMetadata(self, item):
         if item:
-            selectedFile = item.text()
-            self.selectedFile.setText(item.text())
+            selectedFile = item.data(Qt.ItemDataRole.UserRole)
+            self.selectedFile.setText(item.data(Qt.ItemDataRole.UserRole))
 
             if Path(selectedFile).exists():
                 if selectedFile.lower().endswith(('.gif','.webp')):
@@ -253,7 +250,7 @@ class MainWindow(FramelessMainWindow):
                     self.imageView.fitInView(self.imageScene.sceneRect(), Qt.AspectRatioMode.KeepAspectRatio) #workaround
                     self.imageView.resetZoom()
                 with open(selectedFile, 'rb') as file:
-                    image = imageProcess(file)
+                    image = ImageProcess(file)
                     prompt = image.positivePrompt()
                     if prompt == -1:
                         for _, widget, _ in self.widgetInfo:
@@ -381,6 +378,11 @@ class MainWindow(FramelessMainWindow):
         
         if self.settings.value("main_window_state"):
             self.restoreState(self.settings.value("main_window_state"))
+        
+        if self.settings.value("main_window_geometry"):
+            self.restoreGeometry(self.settings.value("main_window_geometry"))
+        else:
+            self.resize(720,720)
 
     def closeEvent(self, event):
         self.saveSettings()

@@ -1,8 +1,17 @@
 from PIL import Image, ExifTags
-import re, filetype, json
+from enum import Enum, auto
 from mutagen.mp4 import MP4
+import re, filetype, json
 
-class imageProcess:
+class ImageType(Enum):
+    WebUI = auto()
+    NovelAI = auto()
+    ComfyUI = auto()
+
+class VideoType(Enum):
+    PixAI = auto()
+
+class ImageProcess:
     def __init__(self, fn):
         ft = filetype.guess(fn)
         self.data = {"prompt": "", 
@@ -23,20 +32,20 @@ class imageProcess:
 
             if 'parameters' in self.image.info: #web ui
                 self.info = str(self.image.info['parameters'])
-                self.metadataType = 'parameters'
+                self.metadataType = ImageType.WebUI
                 self.compatible = True
                 self.image.close()
                 del self.image
             elif 'Comment' in self.image.info: #novelai
                 self.info = json.loads(self.image.info['Comment'])
-                self.metadataType = 'comment'
+                self.metadataType = ImageType.NovelAI
                 self.compatible = True
                 self.image.close()
                 self.image = None
                 del self.image
             elif 'prompt' in self.image.info: #comfyui
                 self.info = json.loads(self.image.info['prompt'])
-                self.metadataType = 'prompt'
+                self.metadataType = ImageType.ComfyUI
                 self.compatible = True
                 self.image.close()
                 self.image = None
@@ -54,7 +63,7 @@ class imageProcess:
                             user_comment_unicode = user_comment.decode("utf-8") #decode
                             user_comment_unicode_sanitized = user_comment_unicode.replace('UNICODE', '').replace('\x00', '')
                             self.info = user_comment_unicode_sanitized
-                            self.metadataType = 'parameters'
+                            self.metadataType = ImageType.WebUI
                             self.compatible = True
                         
             self.image.close()
@@ -66,7 +75,7 @@ class imageProcess:
             try:
                 if '\xa9cmt' in video.tags:
                     metadata = video.tags['\xa9cmt']
-                    self.metadataType = "video"
+                    self.metadataType = VideoType.PixAI
                     self.info = json.loads(metadata[0])
                     self.compatible = True
                     video = None
@@ -98,7 +107,7 @@ class imageProcess:
         return None
 
     def getInfo(self): # messy
-        if self.metadataType == 'parameters':
+        if self.metadataType == ImageType.WebUI:
             matches = re.findall(r'([^:,]+): ([^,]+)', self.info.replace('\n', ','))
             for match in matches:
                 key = match[0].strip().lower().replace(' ', '_')
@@ -121,7 +130,7 @@ class imageProcess:
             if "model" not in self.data:
                 self.data["model"] = ""
             return self.data
-        if self.metadataType == 'comment': #novelai
+        if self.metadataType == ImageType.NovelAI: #novelai
             self.data["prompt"] = str(self.info["prompt"])
             self.data["negative_prompt"] = str(self.info["uc"])
             self.data["steps"] = str(self.info["steps"])
@@ -136,7 +145,7 @@ class imageProcess:
             loraString = ' '.join(uniqueLoraTags)
             self.data["lora"] = loraString
             return self.data
-        if self.metadataType == 'video':
+        if self.metadataType == VideoType.PixAI:
             promptKey = self.findKeyName(data=self.info, keys="positive")[0]
             self.data["prompt"] = self.info.get('prompt', {}).get(f'{promptKey}', {}).get('inputs', {}).get('text')
             self.data["negative_prompt"] = self.info.get('prompt', {}).get('320', {}).get('inputs', {}).get('text')
@@ -149,7 +158,7 @@ class imageProcess:
             self.data["model_hash"] = ""
             self.data["lora"] = ""
             return self.data
-        if self.metadataType == 'prompt':
+        if self.metadataType == ImageType.ComfyUI:
             promptKey = self.findKeyName(data=self.info, keys="positive")
             if type(promptKey) == list:
                 promptKey = self.findKeyName(data=self.info, keys="positive")[0]
