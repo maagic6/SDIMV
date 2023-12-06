@@ -8,7 +8,7 @@ SDIMV
 <p align="center">
   <a href="https://github.com/maagic6/SDIMV/releases/tag/v1.2.0"><img alt="Release" src="https://img.shields.io/badge/Release-v1.2.0-brightgreen"></a>
   <a href="https://github.com/maagic6/SDIMV/releases"><img alt="Downloads" src="https://img.shields.io/github/downloads/maagic6/SDIMV/total"></a>
-  <a href="https://opensource.org/licenses/MIT"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-brightgreen.svg"></a>
+  <a href="https://github.com/maagic6/SDIMV/main/README.md"><img alt="License: GPLv3" src="https://img.shields.io/badge/License-GPLv3-brightgreen.svg"></a>
 </p>
 
 <p align="center">Standalone program for viewing metadata of stable diffusion generated images</p>
