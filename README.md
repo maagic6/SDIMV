@@ -8,12 +8,10 @@ SDIMV
 <p align="center">
   <a href="https://github.com/maagic6/SDIMV/releases/tag/v1.2.0"><img alt="Release" src="https://img.shields.io/badge/Release-v1.2.0-brightgreen"></a>
   <a href="https://github.com/maagic6/SDIMV/releases"><img alt="Downloads" src="https://img.shields.io/github/downloads/maagic6/SDIMV/total"></a>
-  <a href="https://opensource.org/licenses/MIT"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-brightgreen.svg"></a>
+  <a href="https://github.com/maagic6/SDIMV/blob/main/README.md"><img alt="License: GPLv3" src="https://img.shields.io/badge/License-GPLv3-brightgreen.svg"></a>
 </p>
 
 <p align="center">Standalone program for viewing metadata of stable diffusion generated images</p>
-
-<p align="center">Currently supports AUTOMATIC1111 web UI and NovelAI images</p>
 
 <div align="center">
   <img src="https://github.com/maagic6/SDIMV/assets/80424597/de9f6f55-5d01-4987-ba18-199ea1befa30" width="60%" height="60%">
@@ -28,7 +26,6 @@ Features
 - Supports AUTOMATIC1111 web UI, NovelAI, and ComfyUI* png images
 - Supports AUTOMATIC1111 web UI jpg images
 - Supports PixAI mp4 animations
-- Supports viewing of webp images
 - Resizing and rearranging of UI
 - Drag and drop images/folders
   
