@@ -57,9 +57,12 @@ class FileHandler:
         for file_path in file_paths:
             item = QListWidgetItem()
             #item.setSizeHint(QSize(200, 200)) 
-            loader = ImageLoader(file_path, item)
-            threadPool.start(loader)
-            threadPool.waitForDone()
+            #loader = ImageLoader(file_path, item)
+            #threadPool.start(loader)
+            #threadPool.waitForDone()
+            filename = os.path.basename(file_path)
+            item.setData(0, filename)
+            item.setData(Qt.ItemDataRole.UserRole, file_path)
             self.main_window.fileList.addItem(item)
         self.main_window.fileList.setIconSize(QSize(100,100))
         if self.main_window.fileList.count() > 0:
@@ -68,6 +71,24 @@ class FileHandler:
             self.main_window.viewMetadata(last_item)
         else:
             self.main_window.viewMetadata(None)
+
+    def lazyLoadIcon(self):
+        threadPool = QThreadPool.globalInstance()
+        rect = self.main_window.fileList.viewport().contentsRect()
+        for row in range(self.main_window.fileList.count()):
+            index = self.main_window.fileList.model().index(row, 0)
+            item = self.main_window.fileList.itemFromIndex(index)
+
+            if item and self.isItemVisible(item, rect):
+                if item.data(Qt.ItemDataRole.DecorationRole) is None:
+                    #do something to update the icons
+                    filePath = item.data(Qt.ItemDataRole.UserRole)
+                    loader = ImageLoader(filePath, item)
+                    threadPool.start(loader)
+    
+    def isItemVisible(self, item, rect):
+        item_rect = self.main_window.fileList.visualItemRect(item)
+        return item_rect.intersects(rect)
 
     def clearFileList(self):
         self.main_window.fileList.clear()
@@ -127,9 +148,10 @@ class ImageLoader(QRunnable):
         self.item = item
 
     def run(self):
-        filename = os.path.basename(self.file_path)
+        #filename = os.path.basename(self.file_path)
+        print(f"loading image {self.item.data(0)}")
         thumbnail_pixmap = QPixmap(self.file_path).scaled(100, 100, aspectRatioMode=Qt.AspectRatioMode.KeepAspectRatio, transformMode=Qt.TransformationMode.SmoothTransformation)
         icon = QIcon(thumbnail_pixmap)
-        self.item.setIcon(icon)
-        self.item.setData(0, filename)
-        self.item.setData(Qt.ItemDataRole.UserRole, self.file_path)
+        self.item.setData(1, icon)
+        #self.item.setData(0, filename)
+        #self.item.setData(Qt.ItemDataRole.UserRole, self.file_path)

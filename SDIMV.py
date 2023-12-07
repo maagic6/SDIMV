@@ -33,6 +33,7 @@ from about_dialog import AboutDialog
 class MainWindow(FramelessMainWindow):
     def __init__(self):
         super().__init__()
+        self.initialized = False
         self.fileHandler = FileHandler(self)
         #window size
         self.setTitleBar(CustomTitleBar(self))
@@ -179,11 +180,13 @@ class MainWindow(FramelessMainWindow):
         self.isMediaPlayerDeleted = False
         self.isMovieDeleted = False
 
+        self.fileList.verticalScrollBar().valueChanged.connect(self.fileHandler.lazyLoadIcon)
         self.fileListWidget.dockLocationChanged.connect(self.updateImageView)
         self.metadataWidget.dockLocationChanged.connect(self.updateImageView)
         self.fileListWidget.installEventFilter(self)
         self.imageViewWidget.installEventFilter(self)
         self.metadataWidget.installEventFilter(self)
+        self.fileList.installEventFilter(self)
         self.installEventFilter(self)
 
         # load settings
@@ -193,6 +196,7 @@ class MainWindow(FramelessMainWindow):
         self.setAcceptDrops(True)
 
         self.show()
+        self.initialized = True
 
         if len(sys.argv) > 1:
             new_files = []
@@ -396,6 +400,9 @@ class MainWindow(FramelessMainWindow):
         if obj in (self.fileListWidget, self.imageViewWidget):
             if event.type() == QEvent.Type.Move:
                 self.updateImageView()
+        if obj == self.fileList:
+            if event.type() == QEvent.Type.Resize and self.initialized == True:
+                self.fileHandler.lazyLoadIcon()
         return super(MainWindow, self).eventFilter(obj, event)
 
     def showContextMenu(self, event):
@@ -415,13 +422,15 @@ class MainWindow(FramelessMainWindow):
         menu.exec(self.fileList.mapToGlobal(event))
 
     def test(self):
-        rect = self.fileList.viewport().contentsRect()
+        '''rect = self.fileList.viewport().contentsRect()
         for row in range(self.fileList.count()):
             index = self.fileList.model().index(row, 0)
             item = self.fileList.itemFromIndex(index)
 
             if item and self.isItemVisible(item, rect):
-                print(f"Filename: {item.data(0)}")
+                print(f"Filename: {item.data(0)}")'''
+
+        self.fileHandler.lazyLoadIcon()
 
     def isItemVisible(self, item, rect):
         item_rect = self.fileList.visualItemRect(item)

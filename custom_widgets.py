@@ -89,10 +89,10 @@ class CustomListWidget(QListWidget):
         num_columns = max(1, viewport_width // 150)
 
         if num_columns > 1:
-            spacing = (viewport_width - (num_columns * 150)) // (num_columns+1)
-            #print(f"viewport width:{viewport_width}")
-            #print(f"spacing:{spacing}")
-            #print(f"column no.:{num_columns}")
+            spacing = ((viewport_width - 5) - (num_columns * 150)) // (num_columns+1) #quickfix
+            print(f"spacing: {spacing}")
+            print(f"item width: { 145 }")
+            print(f"viewport width: {viewport_width}")
             try:
                 self.setStyleSheet(f"QListWidget::item {{ margin-left: {spacing}px; width: 145px; height: 145px; border: 0px solid; }}")
             except Exception as e:
