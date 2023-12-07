@@ -1,5 +1,5 @@
-from PyQt6.QtWidgets import QDockWidget, QLineEdit, QTextEdit, QGraphicsView, QListWidget
-from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import QDockWidget, QLineEdit, QTextEdit, QGraphicsView, QListWidget, QStyledItemDelegate, QListWidgetItem
+from PyQt6.QtCore import Qt, QSize
 from PyQt6.QtGui import QWheelEvent, QFont, QColor
 from qframelesswindow import StandardTitleBar
 
@@ -63,6 +63,17 @@ class ZoomableGraphicsView(QGraphicsView):
         self.current_zoom = 1.0
 
 class CustomListWidget(QListWidget):
+    def __init__(self):
+        super().__init__()
+        #self.setItemDelegate(DynamicSizeDelegate())
+        #self.setFlow(QListWidget.Flow.LeftToRight)
+        #self.setWrapping(True)
+        self.setViewMode(QListWidget.ViewMode.IconMode)
+        self.setResizeMode(QListWidget.ResizeMode.Adjust)
+        self.setMovement(QListWidget.Movement.Static)
+        #self.setGridSize(QSize(20,20))
+        #self.setUniformItemSizes(True)
+        self.setSelectionRectVisible(True)
     def wheelEvent(self, event: QWheelEvent):
         current_index = self.currentRow()
         total_items = self.count()
@@ -70,7 +81,38 @@ class CustomListWidget(QListWidget):
             return
         new_index = (current_index - 1) % total_items if event.angleDelta().y() > 0 else (current_index + 1) % total_items
         self.setCurrentRow(new_index)
+    
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        try:
+            self.updateSpacing()
+        except Exception as e:
+            print(f"Exception: {e}")
 
+    def updateSpacing(self):
+        #total_width = sum(self.item(i).sizeHint().width() for i in range(self.count()))
+        viewport_width = self.viewport().width()
+        num_columns = max(1, viewport_width // 150)  # Assuming each item is 200px wide
+
+        if num_columns > 1:
+            spacing = (viewport_width - (num_columns * 150)) // (num_columns+1)
+            print(f"viewport width:{viewport_width}")
+            print(f"spacing:{spacing}")
+            print(f"column no.:{num_columns}")
+            try:
+                self.setStyleSheet(f"QListWidget::item {{ margin-left: {spacing}px; width: 145px; height: 145px; }}")
+            except Exception as e:
+                print(f"Exception: {e}")
+        else:
+            self.setStyleSheet("QListWidget::item { margin-left: 0px; margin-bottom: 0px; }")
+
+'''class DynamicSizeDelegate(QStyledItemDelegate):
+    def sizeHint(self, option, index):
+        size = super().sizeHint(option, index)
+        size.setHeight(150)
+        size.setWidth(150)
+        return size'''
+    
 class CustomTitleBar(StandardTitleBar):
     def __init__(self, parent):
         super().__init__(parent)

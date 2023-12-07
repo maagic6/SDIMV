@@ -87,7 +87,8 @@ class MainWindow(FramelessMainWindow):
         self.fileList.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.fileList.customContextMenuRequested.connect(self.showContextMenu)
         self.fileList.itemSelectionChanged.connect(self.handleItemSelectionChanged)
-        self.fileList.setViewMode(CustomListWidget.ViewMode.IconMode)
+        #self.fileList.setViewMode(CustomListWidget.ViewMode.IconMode)
+        #self.fileList.setResizeMode(CustomListWidget.ResizeMode.Adjust)
 
         self.selectedFile = QLineEdit()
         self.browseButton = QPushButton('Browse')
@@ -405,11 +406,27 @@ class MainWindow(FramelessMainWindow):
         openfolder_action.triggered.connect(self.openFolder)
         remove_action = QAction("Remove", self)
         remove_action.triggered.connect(self.fileHandler.removeSelectedItem)
+        test_action = QAction("Test", self)
+        test_action.triggered.connect(self.test)
         menu.addAction(view_action)
         menu.addAction(openfolder_action)
         menu.addAction(remove_action)
+        menu.addAction(test_action)
         menu.exec(self.fileList.mapToGlobal(event))
 
+    def test(self):
+        rect = self.fileList.viewport().contentsRect()
+        for row in range(self.fileList.count()):
+            index = self.fileList.model().index(row, 0)
+            item = self.fileList.itemFromIndex(index)
+
+            if item and self.isItemVisible(item, rect):
+                print(f"Filename: {item.data(0)}")
+
+    def isItemVisible(self, item, rect):
+        item_rect = self.fileList.visualItemRect(item)
+        return item_rect.intersects(rect)
+            
     def openFolder(self):
         selectedItem = self.fileList.currentItem()
         if selectedItem:

@@ -3,7 +3,7 @@ from pathlib import Path
 from urllib.parse import unquote
 from PyQt6.QtWidgets import QFileDialog, QListWidgetItem
 from PyQt6.QtGui import QPixmap, QIcon
-from PyQt6.QtCore import Qt, QSize, QRunnable, QThreadPool, QMetaObject
+from PyQt6.QtCore import Qt, QSize, QRunnable, QThreadPool
 
 class FileHandler:
     def __init__(self, main_window):
@@ -56,13 +56,12 @@ class FileHandler:
         threadPool = QThreadPool.globalInstance()
         for file_path in file_paths:
             item = QListWidgetItem()
-            item.setSizeHint(QSize(100, 100)) 
-            
+            #item.setSizeHint(QSize(200, 200)) 
             loader = ImageLoader(file_path, item)
             threadPool.start(loader)
             threadPool.waitForDone()
             self.main_window.fileList.addItem(item)
-        self.main_window.fileList.setIconSize(QSize(100, 100))
+        self.main_window.fileList.setIconSize(QSize(50,50))
         if self.main_window.fileList.count() > 0:
             last_item = self.main_window.fileList.item(self.main_window.fileList.count() - 1)
             self.main_window.fileList.setCurrentItem(last_item)
@@ -129,7 +128,7 @@ class ImageLoader(QRunnable):
 
     def run(self):
         filename = os.path.basename(self.file_path)
-        thumbnail_pixmap = QPixmap(self.file_path).scaled(50, 50, aspectRatioMode=Qt.AspectRatioMode.IgnoreAspectRatio, transformMode=Qt.TransformationMode.SmoothTransformation)
+        thumbnail_pixmap = QPixmap(self.file_path).scaled(100, 100, aspectRatioMode=Qt.AspectRatioMode.KeepAspectRatio, transformMode=Qt.TransformationMode.SmoothTransformation)
         icon = QIcon(thumbnail_pixmap)
         self.item.setIcon(icon)
         self.item.setData(0, filename)
