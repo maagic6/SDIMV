@@ -65,14 +65,9 @@ class ZoomableGraphicsView(QGraphicsView):
 class CustomListWidget(QListWidget):
     def __init__(self):
         super().__init__()
-        #self.setItemDelegate(DynamicSizeDelegate())
-        #self.setFlow(QListWidget.Flow.LeftToRight)
-        #self.setWrapping(True)
         self.setViewMode(QListWidget.ViewMode.IconMode)
         self.setResizeMode(QListWidget.ResizeMode.Adjust)
         self.setMovement(QListWidget.Movement.Static)
-        #self.setGridSize(QSize(20,20))
-        #self.setUniformItemSizes(True)
         self.setSelectionRectVisible(True)
     def wheelEvent(self, event: QWheelEvent):
         current_index = self.currentRow()
@@ -90,28 +85,20 @@ class CustomListWidget(QListWidget):
             print(f"Exception: {e}")
 
     def updateSpacing(self):
-        #total_width = sum(self.item(i).sizeHint().width() for i in range(self.count()))
         viewport_width = self.viewport().width()
-        num_columns = max(1, viewport_width // 150)  # Assuming each item is 200px wide
+        num_columns = max(1, viewport_width // 150)
 
         if num_columns > 1:
             spacing = (viewport_width - (num_columns * 150)) // (num_columns+1)
-            print(f"viewport width:{viewport_width}")
-            print(f"spacing:{spacing}")
-            print(f"column no.:{num_columns}")
+            #print(f"viewport width:{viewport_width}")
+            #print(f"spacing:{spacing}")
+            #print(f"column no.:{num_columns}")
             try:
-                self.setStyleSheet(f"QListWidget::item {{ margin-left: {spacing}px; width: 145px; height: 145px; }}")
+                self.setStyleSheet(f"QListWidget::item {{ margin-left: {spacing}px; width: 145px; height: 145px; border: 0px solid; }}")
             except Exception as e:
                 print(f"Exception: {e}")
         else:
-            self.setStyleSheet("QListWidget::item { margin-left: 0px; margin-bottom: 0px; }")
-
-'''class DynamicSizeDelegate(QStyledItemDelegate):
-    def sizeHint(self, option, index):
-        size = super().sizeHint(option, index)
-        size.setHeight(150)
-        size.setWidth(150)
-        return size'''
+            self.setStyleSheet("QListWidget::item { margin-left: 0px; width: 145px; height: 145px; border: 0px solid; }")
     
 class CustomTitleBar(StandardTitleBar):
     def __init__(self, parent):

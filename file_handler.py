@@ -61,7 +61,7 @@ class FileHandler:
             threadPool.start(loader)
             threadPool.waitForDone()
             self.main_window.fileList.addItem(item)
-        self.main_window.fileList.setIconSize(QSize(50,50))
+        self.main_window.fileList.setIconSize(QSize(100,100))
         if self.main_window.fileList.count() > 0:
             last_item = self.main_window.fileList.item(self.main_window.fileList.count() - 1)
             self.main_window.fileList.setCurrentItem(last_item)
