@@ -348,13 +348,13 @@ class MainWindow(FramelessMainWindow):
                     elif 'Temp' in Path(file_path).parts:
                         copied_path = self.fileHandler.copyTempImage(file_path)
                         new_files.append(copied_path)
-                    elif not self.fileHandler.isFileInList(file_path):
+                    else:
                         new_files.append(file_path)
                 elif url.scheme() == 'http' or url.scheme() == 'https':
                     downloaded_path = self.fileHandler.downloadImage(url)
                     if downloaded_path and not self.fileHandler.isFileInList(downloaded_path):
                         new_files.append(downloaded_path)
-
+        new_files = [file_path for file_path in new_files if not self.fileHandler.isFileInList(file_path)]
         self.fileHandler.updateFileList(new_files)
         event.acceptProposedAction()
 
