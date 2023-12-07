@@ -53,7 +53,6 @@ class FileHandler:
             self.updateFileList(filenames)
     
     def updateFileList(self, file_paths):
-        threadPool = QThreadPool.globalInstance()
         for file_path in file_paths:
             item = QListWidgetItem()
             #item.setSizeHint(QSize(200, 200)) 
@@ -81,7 +80,6 @@ class FileHandler:
 
             if item and self.isItemVisible(item, rect):
                 if item.data(Qt.ItemDataRole.DecorationRole) is None:
-                    #do something to update the icons
                     filePath = item.data(Qt.ItemDataRole.UserRole)
                     loader = ImageLoader(filePath, item)
                     threadPool.start(loader)
@@ -149,7 +147,7 @@ class ImageLoader(QRunnable):
 
     def run(self):
         #filename = os.path.basename(self.file_path)
-        print(f"loading image {self.item.data(0)}")
+        #print(f"loading image {self.item.data(0)}")
         thumbnail_pixmap = QPixmap(self.file_path).scaled(100, 100, aspectRatioMode=Qt.AspectRatioMode.KeepAspectRatio, transformMode=Qt.TransformationMode.SmoothTransformation)
         icon = QIcon(thumbnail_pixmap)
         self.item.setData(1, icon)

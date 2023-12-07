@@ -19,7 +19,7 @@ from PyQt6.QtWidgets import (
     QMessageBox,
 )
 from PyQt6.QtGui import QIcon, QAction, QFont, QPainter, QMovie, QPixmap, QDesktopServices
-from PyQt6.QtCore import Qt, QRectF, QEvent, QUrl, QSettings, QSystemSemaphore, QSharedMemory
+from PyQt6.QtCore import Qt, QRectF, QEvent, QUrl, QSettings, QSystemSemaphore, QSharedMemory, QTimer
 from PyQt6.QtMultimedia import QMediaPlayer
 from PyQt6.QtMultimediaWidgets import QGraphicsVideoItem
 from pathlib import Path
@@ -180,7 +180,12 @@ class MainWindow(FramelessMainWindow):
         self.isMediaPlayerDeleted = False
         self.isMovieDeleted = False
 
-        self.fileList.verticalScrollBar().valueChanged.connect(self.fileHandler.lazyLoadIcon)
+        self.lazyLoadTimer = QTimer(self)
+        self.lazyLoadTimer.setInterval(100)
+        self.lazyLoadTimer.setSingleShot(True)
+        self.lazyLoadTimer.timeout.connect(self.fileHandler.lazyLoadIcon)
+
+        self.fileList.verticalScrollBar().valueChanged.connect(self.startLazyLoadTimer)
         self.fileListWidget.dockLocationChanged.connect(self.updateImageView)
         self.metadataWidget.dockLocationChanged.connect(self.updateImageView)
         self.fileListWidget.installEventFilter(self)
@@ -432,9 +437,8 @@ class MainWindow(FramelessMainWindow):
 
         self.fileHandler.lazyLoadIcon()
 
-    def isItemVisible(self, item, rect):
-        item_rect = self.fileList.visualItemRect(item)
-        return item_rect.intersects(rect)
+    def startLazyLoadTimer(self):
+        self.lazyLoadTimer.start()
             
     def openFolder(self):
         selectedItem = self.fileList.currentItem()
