@@ -86,19 +86,19 @@ class CustomListWidget(QListWidget):
 
     def updateSpacing(self):
         viewport_width = self.viewport().width()
-        num_columns = max(1, viewport_width // 150)
+        num_columns = max(1, viewport_width // 125)
 
         if num_columns > 1:
-            spacing = ((viewport_width - 5) - (num_columns * 150)) // (num_columns+1) #quickfix
+            spacing = ((viewport_width - 5) - (num_columns * 125)) // (num_columns+1) #quickfix
             print(f"spacing: {spacing}")
-            print(f"item width: { 145 }")
+            print(f"item width: { 120 }")
             print(f"viewport width: {viewport_width}")
             try:
-                self.setStyleSheet(f"QListWidget::item {{ margin-left: {spacing}px; width: 145px; height: 145px; border: 0px solid; }}")
+                self.setStyleSheet(f"QListWidget::item {{ margin-left: {spacing}px; width: 120px; height: 120px; border: 0px solid; }}")
             except Exception as e:
                 print(f"Exception: {e}")
         else:
-            self.setStyleSheet("QListWidget::item { margin-left: 0px; width: 145px; height: 145px; border: 0px solid; }")
+            self.setStyleSheet("QListWidget::item { margin-left: 0px; width: 120px; height: 120px; border: 0px solid; }")
     
 class CustomTitleBar(StandardTitleBar):
     def __init__(self, parent):

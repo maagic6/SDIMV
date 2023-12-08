@@ -4,10 +4,13 @@ from urllib.parse import unquote
 from PyQt6.QtWidgets import QFileDialog, QListWidgetItem
 from PyQt6.QtGui import QPixmap, QIcon
 from PyQt6.QtCore import Qt, QSize, QRunnable, QThreadPool
+from collections import OrderedDict
 
 class FileHandler:
     def __init__(self, main_window):
         self.main_window = main_window
+        self.thumbnailCache = OrderedDict()
+        self.maxCacheSize = 20
     
     def downloadImage(self, url):
         try:
@@ -81,7 +84,7 @@ class FileHandler:
             if item and self.isItemVisible(item, rect):
                 if item.data(Qt.ItemDataRole.DecorationRole) is None:
                     filePath = item.data(Qt.ItemDataRole.UserRole)
-                    loader = ImageLoader(filePath, item)
+                    loader = ImageLoader(self.main_window, filePath, item, self.thumbnailCache, index, self.maxCacheSize)
                     threadPool.start(loader)
     
     def isItemVisible(self, item, rect):
@@ -139,17 +142,27 @@ class FileHandler:
     def getFileList(self):
         return [self.main_window.fileList.item(row).data(Qt.ItemDataRole.UserRole) for row in range(self.main_window.fileList.count())]
     
+    def getCacheSize(self):
+        return len(self.thumbnailCache)
+
 class ImageLoader(QRunnable):
-    def __init__(self, file_path, item):
+    def __init__(self, main_window, file_path, item, thumbnailCache, index, maxCacheSize):
         super().__init__()
+        self.main_window = main_window
         self.file_path = file_path
         self.item = item
+        self.thumbnailCache = thumbnailCache
+        self.index = index
+        self.maxCacheSize = maxCacheSize
 
     def run(self):
-        #filename = os.path.basename(self.file_path)
-        #print(f"loading image {self.item.data(0)}")
+        print(f"loading image {self.item.data(0)} from disk")
         thumbnail_pixmap = QPixmap(self.file_path).scaled(100, 100, aspectRatioMode=Qt.AspectRatioMode.KeepAspectRatio, transformMode=Qt.TransformationMode.SmoothTransformation)
         icon = QIcon(thumbnail_pixmap)
+        self.thumbnailCache[self.file_path] = self.index
+        if len(self.thumbnailCache) > self.maxCacheSize:
+            (key, index) = self.thumbnailCache.popitem(last=None)
+            item = self.main_window.fileList.itemFromIndex(index)
+            print(f"deleting thumbnail from {item.data(0)}")
+            item.setData(1, None)
         self.item.setData(1, icon)
-        #self.item.setData(0, filename)
-        #self.item.setData(Qt.ItemDataRole.UserRole, self.file_path)

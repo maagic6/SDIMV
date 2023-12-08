@@ -425,7 +425,7 @@ class MainWindow(FramelessMainWindow):
         menu.addAction(remove_action)
         menu.addAction(test_action)
         menu.exec(self.fileList.mapToGlobal(event))
-
+        
     def test(self):
         '''rect = self.fileList.viewport().contentsRect()
         for row in range(self.fileList.count()):
@@ -434,8 +434,7 @@ class MainWindow(FramelessMainWindow):
 
             if item and self.isItemVisible(item, rect):
                 print(f"Filename: {item.data(0)}")'''
-
-        self.fileHandler.lazyLoadIcon()
+        print(self.fileHandler.getCacheSize())
 
     def startLazyLoadTimer(self):
         self.lazyLoadTimer.start()
