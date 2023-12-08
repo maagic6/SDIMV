@@ -156,13 +156,25 @@ class ImageLoader(QRunnable):
         self.maxCacheSize = maxCacheSize
 
     def run(self):
-        print(f"loading image {self.item.data(0)} from disk")
         thumbnail_pixmap = QPixmap(self.file_path).scaled(100, 100, aspectRatioMode=Qt.AspectRatioMode.KeepAspectRatio, transformMode=Qt.TransformationMode.SmoothTransformation)
         icon = QIcon(thumbnail_pixmap)
-        self.thumbnailCache[self.file_path] = self.index
+        self.thumbnailCache[self.file_path] = self.index #cache + 1
         if len(self.thumbnailCache) > self.maxCacheSize:
-            (key, index) = self.thumbnailCache.popitem(last=None)
+            rect = self.main_window.fileList.viewport().contentsRect()
+            (key, index) = self.popUnusedItem(rect)
             item = self.main_window.fileList.itemFromIndex(index)
-            print(f"deleting thumbnail from {item.data(0)}")
             item.setData(1, None)
         self.item.setData(1, icon)
+
+    def popUnusedItem(self, rect):
+        key, index = self.thumbnailCache.popitem(last=None)
+        item = self.main_window.fileList.itemFromIndex(index)
+        if self.isItemVisible(item, rect):
+            self.thumbnailCache[key] = index
+            return self.popUnusedItem(rect)
+        else:
+            return key, index
+        
+    def isItemVisible(self, item, rect):
+        item_rect = self.main_window.fileList.visualItemRect(item)
+        return item_rect.intersects(rect)

@@ -425,7 +425,7 @@ class MainWindow(FramelessMainWindow):
         menu.addAction(remove_action)
         menu.addAction(test_action)
         menu.exec(self.fileList.mapToGlobal(event))
-        
+
     def test(self):
         '''rect = self.fileList.viewport().contentsRect()
         for row in range(self.fileList.count()):
