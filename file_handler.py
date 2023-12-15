@@ -53,7 +53,9 @@ class FileHandler:
             "Images and videos (*.png *.jpg *.gif *.webp *.mp4)"
         )
         if filenames:
-            self.updateFileList(filenames)
+            new_files = []
+            new_files = [filename for filename in filenames if not self.isFileInList(filename)]
+            self.updateFileList(new_files)
     
     def updateFileList(self, file_paths):
         for file_path in file_paths:

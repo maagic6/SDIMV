@@ -186,8 +186,8 @@ class MainWindow(FramelessMainWindow):
         self.lazyLoadTimer.timeout.connect(self.fileHandler.lazyLoadIcon)
 
         self.fileList.verticalScrollBar().valueChanged.connect(self.startLazyLoadTimer)
-        self.fileListWidget.dockLocationChanged.connect(self.imageView.updateImageView)
-        self.metadataWidget.dockLocationChanged.connect(self.imageView.updateImageView)
+        self.fileListWidget.dockLocationChanged.connect(self.updateImageView)
+        self.metadataWidget.dockLocationChanged.connect(self.updateImageView)
         self.fileListWidget.installEventFilter(self)
         self.imageViewWidget.installEventFilter(self)
         self.metadataWidget.installEventFilter(self)
@@ -326,7 +326,7 @@ class MainWindow(FramelessMainWindow):
             for url in mime_data.urls():
                 if url.isLocalFile():
                     file_path = url.toLocalFile()
-                    if Path(file_path).is_dir() or Path(file_path).suffix.lower() in ['.png', '.gif', '.webp', '.mp4']:
+                    if Path(file_path).is_dir() or Path(file_path).suffix.lower() in ['.png', '.gif', '.webp', '.mp4', '.jpg']:
                         # accept local files
                         event.acceptProposedAction()
                         return
