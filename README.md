@@ -6,7 +6,7 @@ SDIMV
 </h1>
 
 <p align="center">
-  <a href="https://github.com/maagic6/SDIMV/releases/tag/v1.2.0"><img alt="Release" src="https://img.shields.io/badge/Release-v1.2.0-brightgreen"></a>
+  <a href="https://github.com/maagic6/SDIMV/releases/tag/v1.2.1"><img alt="Release" src="https://img.shields.io/badge/Release-v1.2.1-brightgreen"></a>
   <a href="https://github.com/maagic6/SDIMV/releases"><img alt="Downloads" src="https://img.shields.io/github/downloads/maagic6/SDIMV/total"></a>
   <a href="https://github.com/maagic6/SDIMV/blob/main/README.md"><img alt="License: GPLv3" src="https://img.shields.io/badge/License-GPLv3-brightgreen.svg"></a>
 </p>
