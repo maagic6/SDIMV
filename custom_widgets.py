@@ -1,6 +1,6 @@
-from PyQt6.QtWidgets import QDockWidget, QLineEdit, QTextEdit, QGraphicsView, QListWidget, QStyledItemDelegate, QListWidgetItem
+from PyQt6.QtWidgets import QDockWidget, QLineEdit, QTextEdit, QGraphicsView, QListWidget, QStyledItemDelegate
 from PyQt6.QtCore import Qt, QSize
-from PyQt6.QtGui import QWheelEvent, QFont, QColor
+from PyQt6.QtGui import QWheelEvent, QFont, QColor, QIcon
 from qframelesswindow import StandardTitleBar
 
 class CustomDockWidget(QDockWidget):
@@ -68,7 +68,7 @@ class CustomListWidget(QListWidget):
         self.setViewMode(QListWidget.ViewMode.IconMode)
         self.setResizeMode(QListWidget.ResizeMode.Adjust)
         self.setMovement(QListWidget.Movement.Static)
-        self.setSelectionRectVisible(True)
+        
     def wheelEvent(self, event: QWheelEvent):
         current_index = self.currentRow()
         total_items = self.count()
@@ -80,7 +80,8 @@ class CustomListWidget(QListWidget):
     def resizeEvent(self, event):
         super().resizeEvent(event)
         try:
-            self.updateSpacing()
+            if self.viewMode() == CustomListWidget.ViewMode.IconMode:
+                self.updateSpacing()
         except Exception as e:
             print(f"Exception: {e}")
 
@@ -89,10 +90,10 @@ class CustomListWidget(QListWidget):
         num_columns = max(1, viewport_width // 125)
 
         if num_columns > 1:
-            spacing = ((viewport_width - 5) - (num_columns * 125)) // (num_columns+1) #quickfix
-            print(f"spacing: {spacing}")
+            spacing = ((viewport_width - 15) - (num_columns * 125)) // (num_columns+1) #quickfix, scrollbar
+            '''print(f"spacing: {spacing}")
             print(f"item width: { 120 }")
-            print(f"viewport width: {viewport_width}")
+            print(f"viewport width: {viewport_width}")'''
             try:
                 self.setStyleSheet(f"QListWidget::item {{ margin-left: {spacing}px; width: 120px; height: 120px; border: 0px solid; }}")
             except Exception as e:

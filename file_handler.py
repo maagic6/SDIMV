@@ -10,7 +10,7 @@ class FileHandler:
     def __init__(self, main_window):
         self.main_window = main_window
         self.thumbnailCache = OrderedDict()
-        self.maxCacheSize = 20
+        self.maxCacheSize = 25
     
     def downloadImage(self, url):
         try:
@@ -86,6 +86,16 @@ class FileHandler:
                     filePath = item.data(Qt.ItemDataRole.UserRole)
                     loader = ImageLoader(self.main_window, filePath, item, self.thumbnailCache, index, self.maxCacheSize)
                     threadPool.start(loader)
+                #if (threadPool.activeThreadCount()) > 0:
+                    #print(threadPool.activeThreadCount())
+        print(f"cache size {self.getCacheSize()}")
+
+    def clearIcons(self):
+        for row in range(self.main_window.fileList.count()):
+            index = self.main_window.fileList.model().index(row, 0)
+            item = self.main_window.fileList.itemFromIndex(index)
+            item.setData(1, None)
+        self.thumbnailCache.clear()
     
     def isItemVisible(self, item, rect):
         item_rect = self.main_window.fileList.visualItemRect(item)
@@ -104,6 +114,9 @@ class FileHandler:
         if selectedItem:
             selectedIndex = self.main_window.fileList.row(selectedItem)
             self.main_window.fileList.takeItem(selectedIndex)
+            if self.main_window.fileList.viewMode() == self.main_window.fileList.ViewMode.IconMode:
+                print(self.thumbnailCache[selectedItem.data(Qt.ItemDataRole.UserRole)])
+                self.thumbnailCache.pop(selectedItem.data(Qt.ItemDataRole.UserRole))
             # if last index
             if selectedIndex == (self.main_window.fileList.count()):
                 if self.main_window.fileList.count() > 0:

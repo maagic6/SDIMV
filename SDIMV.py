@@ -186,8 +186,8 @@ class MainWindow(FramelessMainWindow):
         self.lazyLoadTimer.timeout.connect(self.fileHandler.lazyLoadIcon)
 
         self.fileList.verticalScrollBar().valueChanged.connect(self.startLazyLoadTimer)
-        self.fileListWidget.dockLocationChanged.connect(self.updateImageView)
-        self.metadataWidget.dockLocationChanged.connect(self.updateImageView)
+        self.fileListWidget.dockLocationChanged.connect(self.imageView.updateImageView)
+        self.metadataWidget.dockLocationChanged.connect(self.imageView.updateImageView)
         self.fileListWidget.installEventFilter(self)
         self.imageViewWidget.installEventFilter(self)
         self.metadataWidget.installEventFilter(self)
@@ -384,7 +384,8 @@ class MainWindow(FramelessMainWindow):
 
     def loadSettings(self):
         file_paths = self.settings.value("selectedFiles", [])
-        self.fileHandler.updateFileList(file_paths)
+        if file_paths is not None:
+            self.fileHandler.updateFileList(file_paths)
         
         if self.settings.value("main_window_state"):
             self.restoreState(self.settings.value("main_window_state"))
@@ -406,7 +407,7 @@ class MainWindow(FramelessMainWindow):
             if event.type() == QEvent.Type.Move:
                 self.updateImageView()
         if obj == self.fileList:
-            if event.type() == QEvent.Type.Resize and self.initialized == True:
+            if event.type() == QEvent.Type.Resize and self.fileList.viewMode() == CustomListWidget.ViewMode.IconMode and self.initialized == True:
                 self.fileHandler.lazyLoadIcon()
         return super(MainWindow, self).eventFilter(obj, event)
 
@@ -434,10 +435,18 @@ class MainWindow(FramelessMainWindow):
 
             if item and self.isItemVisible(item, rect):
                 print(f"Filename: {item.data(0)}")'''
-        print(self.fileHandler.getCacheSize())
+        if self.fileList.viewMode() == CustomListWidget.ViewMode.IconMode:
+            self.fileList.setViewMode(CustomListWidget.ViewMode.ListMode)
+            self.fileHandler.clearIcons()
+            self.fileList.setStyleSheet("QListWidget::item { height: 20px; }")
+        elif self.fileList.viewMode() == CustomListWidget.ViewMode.ListMode:
+            self.fileList.setViewMode(CustomListWidget.ViewMode.IconMode)
+            self.startLazyLoadTimer()
+            self.fileList.updateSpacing()
 
     def startLazyLoadTimer(self):
-        self.lazyLoadTimer.start()
+        if self.fileList.viewMode() == CustomListWidget.ViewMode.IconMode:
+            self.lazyLoadTimer.start()
             
     def openFolder(self):
         selectedItem = self.fileList.currentItem()
@@ -460,7 +469,7 @@ class MainWindow(FramelessMainWindow):
 
 def launch():
     app = QApplication(sys.argv)
-    window_id = 'application'
+    window_id = 'application'   
     shared_mem_id = 'sharedmemid'
     semaphore = QSystemSemaphore(window_id, 1)
     semaphore.acquire()
