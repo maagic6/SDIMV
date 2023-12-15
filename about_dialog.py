@@ -26,7 +26,7 @@ class AboutDialog(FramelessDialog):
         githubLink = QLabel('<a href="https://github.com/maagic6/SDIMV">GitHub</a>')
         githubLink.setOpenExternalLinks(True)
         vlayout.addWidget(title, alignment=Qt.AlignmentFlag.AlignTop)
-        vlayout.addWidget(QLabel("v1.2.0"), alignment=Qt.AlignmentFlag.AlignTop)
+        vlayout.addWidget(QLabel("v1.2.1"), alignment=Qt.AlignmentFlag.AlignTop)
         vlayout.addWidget(githubLink, alignment=Qt.AlignmentFlag.AlignBottom)
         hlayout.addWidget(logo)
         hlayout.addLayout(vlayout)
