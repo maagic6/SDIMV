@@ -319,7 +319,7 @@ class MainWindow(FramelessMainWindow):
             for url in mime_data.urls():
                 if url.isLocalFile():
                     file_path = url.toLocalFile()
-                    if Path(file_path).is_dir() or Path(file_path).suffix.lower() in ['.png', '.gif', '.webp', '.mp4']:
+                    if Path(file_path).is_dir() or Path(file_path).suffix.lower() in ['.png', '.gif', '.webp', '.mp4', '.jpg']:
                         # accept local files
                         event.acceptProposedAction()
                         return
